@@ -1,144 +1,107 @@
 package com.urbancode.ds.jenkins.plugins.urbandeploypublisher;
 
+import com.urbancode.ud.client.PropertyClient;
+import com.urbancode.ud.client.ComponentClient;
+
+import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
+
 import javax.ws.rs.core.UriBuilder;
 
+import org.apache.http.client.methods.HttpGet;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 
 import hudson.model.BuildListener;
 
 public class PropsHelper {
+    PropertyClient propClient;
+    ComponentClient compClient;
 
-    private HttpHelper httpHelper = new HttpHelper();
+    public void setComponentVersionProperties(String url, List<String> componentNames, String versionName,
+            String properties, String user, String pass, BuildListener listener) {
 
-    public void setComponentVersionProperties(String url, List<String> componentNames, String versionName, String properties, String user, String pass, BuildListener listener) {
         if (properties.length() > 0) {
+            URI ucdUrl = UriBuilder.fromUri(url).build();
+            propClient = new PropertyClient(ucdUrl, user, pass);
+            compClient = new ComponentClient(ucdUrl, user, pass);
             try {
                 Properties propertiesToSet = new Properties();
                 propertiesToSet.load(new StringReader(properties));
-                httpHelper.setUsernameAndPassword(user, pass);
 
                 for (String componentName : componentNames) {
                     setComponentVersionProperties(url, componentName, versionName, propertiesToSet, listener);
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 listener.getLogger().println("An error occured while parsing the properties: " + e.getMessage());
             }
         }
     }
 
-    public void setComponentVersionProperties(String url, String componentName, String versionName, Properties propertiesToSet, BuildListener listener) {
+    public void setComponentVersionProperties(String url, String componentName, String versionName,
+            Properties propertiesToSet, BuildListener listener) {
+
         if (!propertiesToSet.isEmpty()) {
             // get the component version
             try {
-                String versionsUrl = UriBuilder.fromUri(url).segment("rest", "deploy", "component", componentName, "versions", "false").build().toString();
-                JSONArray versionsJson = new JSONArray(httpHelper.getContent(versionsUrl));
-                String versionId = null;
-                for (int versionIndex = 0; versionIndex < versionsJson.length(); versionIndex++) {
-                    JSONObject versionJson = versionsJson.getJSONObject(versionIndex);
-                    if (versionName.equals(versionJson.getString("name"))) {
-                        versionId = versionJson.getString("id");
-                        break;
-                    }
+                JSONObject propSheetDef = compClient.getComponentVersionPropSheetDef(componentName);
+                String propSheetDefId = (String)propSheetDef.get("id");
+                String propSheetDefPath = (String)propSheetDef.get("path");
+                JSONArray existingPropDefs = propClient.getPropSheetDefPropDefs(propSheetDefPath);
+
+                for (int i = 0; i < existingPropDefs.length(); i++) {
+                    JSONObject propDef = existingPropDefs.getJSONObject(i);
+                    String name = propDef.getString("name");
+                    String value = (String)propertiesToSet.getProperty(name);
+                    propDef.put("value", value);
+                    propertiesToSet.remove(name);
                 }
 
-                if (versionId == null) {
-                    throw new Exception("Version " + versionName + " not found on component " + componentName + ".");
-                }
+                if (!propertiesToSet.isEmpty()) {
+                    listener.getLogger().println("Creating non-existent property definitions.");
+                    UUID propSheetDefUUID = UUID.fromString(propSheetDefId);
 
-                //you can only create properties on the version that are defined on the component
-                String componentUrl = UriBuilder.fromUri(url).segment("rest", "deploy", "component", componentName).build().toString();
-                listener.getLogger().println("Retrieving component");
-                String componentContent = httpHelper.getContent(componentUrl);
+                    for (Map.Entry<Object, Object> property : propertiesToSet.entrySet()) {
+                        String name = (String)property.getKey();
+                        String description = "";
+                        String label = "";
+                        Boolean required = false;
+                        String type = "TEXT";
+                        String value = (String)property.getValue();
 
-                JSONObject componentJson= new JSONObject(componentContent);
-                String componentId = componentJson.getString("id");
-
-                String propSheetDefPath = componentJson.getJSONObject("versionPropSheetDef").getString("path");
-                propSheetDefPath += ".-1";
-                String propDefsUrl = UriBuilder.fromUri(url).segment("property", "propSheetDef", propSheetDefPath, "propDefs").build().toString();
-                listener.getLogger().println("Retrieving property definitions");
-                String propSheetDefContent = httpHelper.getContent(propDefsUrl);
-                JSONArray propSheetDefJson = new JSONArray(propSheetDefContent);
-
-                List<String> propertiesToCreate = new ArrayList<String>();
-                for (Object propertyName : propertiesToSet.keySet()) {
-                    boolean foundProperty = false;
-                    for (int psIndex = 0; psIndex < propSheetDefJson.length(); psIndex++) {
-                        JSONObject propSheetDef = propSheetDefJson.getJSONObject(psIndex);
-                        if (propertyName.equals(propSheetDef.getString("name"))) {
-                            foundProperty = true;
-                            break;
+                        try {
+                            propClient.createPropDef(propSheetDefUUID, propSheetDefPath, name, description, label,
+                                    required, type, value);
+                            listener.getLogger().println("Property: " + name + " created successfully.");
+                        } catch (IOException ex) {
+                            listener.getLogger().println(
+                                    "An error occurred while creating a new property definition on property sheet with id "
+                                            + propSheetDefUUID + ":" + ex.getMessage());
                         }
                     }
-                    if (!foundProperty) {
-                        propertiesToCreate.add((String) propertyName);
+                }
+
+                if (existingPropDefs.length() > 0) {
+                    listener.getLogger().println("Updating existing property definitions");
+
+                    try {
+                        propClient.updatePropDefs(propSheetDefPath, existingPropDefs, false);
+                    } catch (IOException ex) {
+                        listener.getLogger().println(
+                                "An error occurred while updating an existing property definition on property sheet with path "
+                                        + propSheetDefPath + ":" + ex.getMessage());
                     }
                 }
-
-                if (!propertiesToCreate.isEmpty()) {
-                    listener.getLogger().println("Creating non-existent property definitions");
-                    for (String propertyToCreate : propertiesToCreate) {
-                        // {"id":"caa95ea5-cf17-4369-80a4-9abcbffe0da0","name":"my_prop_def","label":"my_prop_def","type":"TEXT",
-                        // "value":"","required":false,"description":"","inherited":false}
-                        JSONObject propertyCreateJson = new JSONObject();
-                        propertyCreateJson.put("name", propertyToCreate);
-                        propertyCreateJson.put("label", "");
-                        propertyCreateJson.put("type", "TEXT");
-                        propertyCreateJson.put("value", "");
-                        propertyCreateJson.put("required", false);
-                        propertyCreateJson.put("description", "");
-                        propertyCreateJson.put("inherited", false);
-                        httpHelper.putContent(propDefsUrl, propertyCreateJson.toString());
-                        listener.getLogger().println("Created property definition for: " + propertyToCreate);
-                    }
-                }
-
-                // now set the properties
-                String versionUrl = UriBuilder.fromUri(url).segment("rest", "deploy", "version", versionId).build().toString();
-                listener.getLogger().println("Retrieving version");
-                JSONObject versionJson = new JSONObject(httpHelper.getContent(versionUrl));
-
-                String propSheetPath = null;
-                int propSheetVersion = 1;
-                JSONArray versionPropSheetsJson = versionJson.getJSONArray("propSheets");
-                for (int vpsIndex = 0; vpsIndex < versionPropSheetsJson.length(); vpsIndex++) {
-                    JSONObject versionPropSheetJson = versionPropSheetsJson.getJSONObject(vpsIndex);
-                    if (!versionPropSheetJson.has("name")) {
-                        propSheetPath = versionPropSheetJson.getString("path");
-                        propSheetVersion = Integer.valueOf(versionPropSheetJson.getString("version"));
-                        break;
-                    }
-                }
-
-                if (propSheetPath == null) {
-                    throw new Exception("Did not find the location to update properties for the component version.");
-                }
-
-                String propSheetPathToUpdate = propSheetPath + "." + propSheetVersion;
-                String versionPropSheetUrl = UriBuilder.fromUri(url).segment("property", "propSheet", propSheetPathToUpdate, "allPropValues").build().toString();
-                JSONObject propertiesJson = new JSONObject();
-                listener.getLogger().println("Updating properties");
-                for (Object propertyName : propertiesToSet.keySet()) {
-                    String propertyValue = propertiesToSet.containsKey((String) propertyName) ? propertiesToSet.getProperty((String) propertyName) : "";
-
-                    propertiesJson.put((String) propertyName, propertyValue);
-                }
-                Map<String, String> headerProps = new HashMap<String, String>();
-                headerProps.put("version", String.valueOf(propSheetVersion));
-                httpHelper.putContentWithHeaders(versionPropSheetUrl, propertiesJson.toString(), headerProps);
-
-                listener.getLogger().println("component: " + componentName + " version:" + versionName + " properties updated successfully");
-            }
-            catch (Exception e) {
-                listener.getLogger().println("An error occured while adding properties to the version: " + e.getMessage());
+            } catch (Exception e) {
+                listener.getLogger().println(
+                        "An error occured while adding properties to the version: " + e.getMessage());
             }
         }
     }

@@ -8,8 +8,8 @@
 
     <property environment="env"/>
 
-	<!-- ==================================================================
-         PROJECT CONFIGURATION 
+        <!-- ==================================================================
+         PROJECT CONFIGURATION
          ================================================================== -->
     <property name="project" value="${ant.project.name}"/>
     <property name="build.life.id" value="${env.AH_BUILD_LIFE_ID}"/>
@@ -19,7 +19,7 @@
     <property name="ahp.workflow.name" value="build workflow [${ahp.branch.name}]"/>
 
     <property name="MAVEN_HOME" value="${env.MAVEN_HOME}"/>
-	
+
     <!-- ==================================================================
          ENVIRONMENTAL DETECTION
          ================================================================== -->
@@ -30,12 +30,12 @@
         <not>
             <os family="windows" />
         </not>
-    </condition>
-	
-	<condition property="mvn" value="${MAVEN_HOME}/bin/mvn.bat">
-		<os family="windows" />
-	</condition>
-	<condition property="mvn" value="${MAVEN_HOME}/bin/mvn">
+  </condition>
+
+        <condition property="mvn" value="${MAVEN_HOME}/bin/mvn.bat">
+            <os family="windows" />
+        </condition>
+        <condition property="mvn" value="${MAVEN_HOME}/bin/mvn">
         <not>
             <os family="windows" />
         </not>
@@ -83,7 +83,7 @@
     <!-- ==================================================================
          ARTIFACT HANDLING
          ================================================================== -->
-    <target name="resolve" unless="resolve.no" 
+    <target name="resolve" unless="resolve.no"
             description="Resolve all dependencies">
             <mkdir dir="${lib.dir}"/>
         <codestation:resolve
@@ -103,6 +103,15 @@
          COMPILE
          ================================================================== -->
     <target name="prepare" depends="resolve">
+        <exec executable="${mvn}">
+          <arg value="install:install-file"/>
+          <arg value="-Dfile=lib/uDeployRestClient.jar"/>
+          <arg value="-DgroupId=uc-uDeployRestClient"/>
+          <arg value="-DartifactId=uc-uDeployRestClient"/>
+          <arg value="-Dversion=1.0-SNAPSHOT"/>
+          <arg value="-Dpackaging=jar"/>
+          <arg value="-DgeneratePom=true"/>
+        </exec>
         <exec executable="${mvn}">
           <arg value="install:install-file"/>
           <arg value="-Dfile=lib/codestation-aggregate.jar"/>
