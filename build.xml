@@ -30,12 +30,12 @@
         <not>
             <os family="windows" />
         </not>
-  </condition>
-
-        <condition property="mvn" value="${MAVEN_HOME}/bin/mvn.bat">
-            <os family="windows" />
-        </condition>
-        <condition property="mvn" value="${MAVEN_HOME}/bin/mvn">
+    </condition>
+    
+    <condition property="mvn" value="${MAVEN_HOME}/bin/mvn.bat">
+        <os family="windows" />
+    </condition>
+    <condition property="mvn" value="${MAVEN_HOME}/bin/mvn">
         <not>
             <os family="windows" />
         </not>

@@ -1,26 +1,41 @@
+/*
+ * Licensed Materials - Property of IBM Corp.
+ * IBM UrbanCode Deploy
+ * IBM AnthillPro
+ * (c) Copyright IBM Corporation 2002, 2016. All Rights Reserved.
+ *
+ * U.S. Government Users Restricted Rights - Use, duplication or disclosure restricted by
+ * GSA ADP Schedule Contract with IBM Corp.
+ */
 package com.urbancode.ds.jenkins.plugins.urbandeploypublisher;
+
+import com.urbancode.commons.util.IO;
+import com.urbancode.ud.client.UDRestClient;
+
+import hudson.AbortException;
+import hudson.util.Secret;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.Serializable;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import javax.ws.rs.core.UriBuilder;
-import hudson.util.Secret;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.kohsuke.stapler.DataBoundConstructor;
 
-import com.urbancode.commons.httpcomponentsutil.HttpClientBuilder;
-import com.urbancode.commons.util.IO;
-
+/**
+ * This class creates an HttpClient for running UCD rest commands
+ *
+ */
+@SuppressWarnings("deprecation") // Triggered by DefaultHttpClient
 public class UrbanDeploySite implements Serializable {
 
     private static final long serialVersionUID = -8723534991244260459L;
@@ -37,48 +52,52 @@ public class UrbanDeploySite implements Serializable {
     /** The password. */
     private Secret password;
 
-    transient private HttpClient client;
+    private boolean trustAllCerts;
+
+    transient private DefaultHttpClient client;
 
     /**
      * Instantiates a new UrbanDeploy site.
-     *
-     * @param profileName
-     *          the profile name
-     * @param url
-     *          the url of the UrbanDeploy instance
-     * @param username
-     *          the username
-     * @param password
-     *          the password
      */
-     public UrbanDeploySite() {
-
+    public UrbanDeploySite() {
     }
 
-     //necessary to allow jenkins to treat password as an encrypted value
-    public UrbanDeploySite(String profileName, String url, String user, Secret password) {
+    /**
+     * Necessary constructor to allow jenkins to treat the password as an encrypted value
+     *
+     * @param profileName
+     * @param url the url of the UrbanDeploy instance
+     * @param user
+     * @param password
+     * @param trustAllCerts
+     */
+    public UrbanDeploySite(String profileName, String url, String user, Secret password, boolean trustAllCerts) {
         this.profileName = profileName;
         this.url = url;
         this.user = user;
         this.password = password;
-
+        this.trustAllCerts = trustAllCerts;
     }
 
-    public UrbanDeploySite(String profileName, String url, String user, String password) {
-        this(profileName, url, user, Secret.fromString(password));
+    /**
+     * Constructor used to bind json to matching parameter names in global.jelly
+     *
+     * @param profileName
+     * @param url
+     * @param user
+     * @param password
+     * @param trustAllCerts
+     */
+    @DataBoundConstructor
+    public UrbanDeploySite(String profileName, String url, String user, String password, boolean trustAllCerts) {
+        this(profileName, url, user, Secret.fromString(password), trustAllCerts);
     }
 
-    public HttpClient getClient() {
+    public DefaultHttpClient getClient() {
         if (client == null) {
-            HttpClientBuilder builder = new HttpClientBuilder();
-            builder.setPreemptiveAuthentication(true);
-            builder.setUsername(user);
-            builder.setPassword(password.toString());
-
-            builder.setTrustAllCerts(true);
-
-            client = builder.buildClient();
+            client = UDRestClient.createHttpClient(user, password.toString(), trustAllCerts);
         }
+
         return client;
     }
 
@@ -139,6 +158,19 @@ public class UrbanDeploySite implements Serializable {
         }
     }
 
+    public URI getUri() throws AbortException {
+        URI udSiteUri;
+
+        try {
+            udSiteUri = new URI(url);
+        }
+        catch (URISyntaxException ex) {
+            throw new AbortException("URL " + url + " is malformed: " + ex.getMessage());
+        }
+
+        return udSiteUri;
+    }
+
     /**
      * Gets the username.
      *
@@ -177,133 +209,56 @@ public class UrbanDeploySite implements Serializable {
         this.password = password;
     }
 
+    /**
+     * Gets trustAllCerts
+     *
+     * @return if all certificates are trusted
+     */
+    public boolean isTrustAllCerts() {
+        return trustAllCerts;
+    }
+
+    /**
+     * Sets trustAllCerts to trust all ssl certificates or not
+     *
+     * @param trustAllCerts
+     */
+    public void setTrustAllCerts(boolean trustAllCerts) {
+        this.trustAllCerts = trustAllCerts;
+    }
+
+    /**
+     * Test whether the client can connect to the UCD site
+     *
+     * @throws Exception
+     */
     public void verifyConnection() throws Exception {
         URI uri = UriBuilder.fromPath(url).path("rest").path("state").build();
         executeJSONGet(uri);
     }
 
-    public String executeJSONGet(URI uri) throws Exception {
+    /**
+     * Execute an HTTP GET request to the UCD server
+     *
+     * @param uri
+     * @throws Exception
+     */
+    private void executeJSONGet(URI uri) throws Exception {
         String result = null;
         HttpClient client = getClient();
         HttpGet method = new HttpGet(uri.toString());
         try {
             HttpResponse response = client.execute(method);
             int responseCode = response.getStatusLine().getStatusCode();
-            //if (responseCode < 200 || responseCode < 300) {
             if (responseCode == 401) {
                 throw new Exception("Error connecting to IBM UrbanCode Deploy: Invalid user and/or password");
             }
             else if (responseCode != 200) {
                 throw new Exception("Error connecting to IBM UrbanCode Deploy: " + responseCode + "using URI: " + uri.toString());
             }
-            else {
-                result = getBody(response);
-            }
         }
         finally {
             method.releaseConnection();
         }
-
-        return result;
-    }
-
-    public String executeJSONDelete(URI uri) throws Exception {
-        String result = null;
-        HttpClient client = getClient();
-        HttpDelete method = new HttpDelete(uri.toString());
-        try {
-            HttpResponse response = client.execute(method);
-            int responseCode = response.getStatusLine().getStatusCode();
-            if (responseCode == 401) {
-                throw new Exception("Error connecting to IBM UrbanCode Deploy: Invalid user and/or password");
-            }
-            else if (responseCode != 200) {
-                throw new Exception("Error connecting to IBM UrbanCode Deploy: " + responseCode);
-            }
-            else {
-                result = getBody(response);
-            }
-        }
-        finally {
-            method.releaseConnection();
-        }
-
-        return result;
-    }
-
-    public String executeJSONPut(URI uri, String putContents) throws Exception {
-        String result = null;
-
-        HttpPut method = new HttpPut(uri.toString());
-        HttpClient client = getClient();
-        StringEntity requestEntity = new StringEntity(putContents);
-        method.setEntity(requestEntity);
-        try {
-            HttpResponse response = client.execute(method);
-            int responseCode = response.getStatusLine().getStatusCode();
-            if (responseCode == 401) {
-                throw new Exception("Error connecting to IBM UrbanCode Deploy: Invalid user and/or password");
-            }
-            else if (responseCode != 200 && responseCode != 204) {
-                throw new Exception("Error connecting to IBM UrbanCode Deploy: " + responseCode);
-            }
-            else {
-                result = getBody(response);
-            }
-        }
-        finally {
-            method.releaseConnection();
-        }
-
-        return result;
-    }
-
-    public String executeJSONPost(URI uri) throws Exception {
-        String result = null;
-
-
-        HttpPost method = new HttpPost(uri.toString());
-        HttpClient client = getClient();
-
-        method.setHeader("charset", "utf-8");
-        try {
-
-            HttpResponse response = client.execute(method);
-            int responseCode = response.getStatusLine().getStatusCode();
-            //if (responseCode < 200 || responseCode < 300) {
-            if (responseCode == 401) {
-                throw new Exception("Error connecting to IBM UrbanCode Deploy: Invalid user and/or password");
-            }
-            else if (responseCode != 200) {
-                throw new Exception("Error connecting to IBM UrbanCode Deploy: " + responseCode);
-            }
-            else {
-                result = getBody(response);
-            }
-        }
-        finally {
-            method.releaseConnection();
-        }
-
-        return result;
-    }
-
-    protected String getBody(HttpResponse response)
-    throws IOException {
-        StringBuilder builder = new StringBuilder();
-        if(response != null && response.getEntity() != null){
-            InputStream body = response.getEntity().getContent();
-            if (body != null) {
-                Reader reader = IO.reader(body, IO.utf8());
-                try {
-                    IO.copy(reader, builder);
-                }
-                finally {
-                    reader.close();
-                }
-            }
-            return builder.toString();
-        }
-        return "";
     }
 }

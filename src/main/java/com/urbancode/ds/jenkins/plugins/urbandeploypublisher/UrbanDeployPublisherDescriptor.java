@@ -1,10 +1,21 @@
+/*
+ * Licensed Materials - Property of IBM Corp.
+ * IBM UrbanCode Deploy
+ * IBM AnthillPro
+ * (c) Copyright IBM Corporation 2002, 2016. All Rights Reserved.
+ *
+ * U.S. Government Users Restricted Rights - Use, duplication or disclosure restricted by
+ * GSA ADP Schedule Contract with IBM Corp.
+ */
 package com.urbancode.ds.jenkins.plugins.urbandeploypublisher;
 
 import hudson.model.AbstractProject;
+import hudson.model.Descriptor.FormException;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.util.CopyOnWriteList;
 import hudson.util.FormFieldValidator;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -13,6 +24,8 @@ import org.kohsuke.stapler.StaplerResponse;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class UrbanDeployPublisherDescriptor extends BuildStepDescriptor<Publisher> {
     /**
@@ -24,7 +37,7 @@ public class UrbanDeployPublisherDescriptor extends BuildStepDescriptor<Publishe
      */
     public UrbanDeployPublisherDescriptor() {
         super(UrbanDeployPublisher.class);
-        load();
+        load(); // load serializable fields of this instance from persisted storage
     }
 
     /**
@@ -65,16 +78,11 @@ public class UrbanDeployPublisherDescriptor extends BuildStepDescriptor<Publishe
      * @return the value of the sites field.
      */
     public UrbanDeploySite[] getSites() {
-        Iterator<UrbanDeploySite> it = sites.iterator();
-        int size = 0;
-        while (it.hasNext()) {
-            it.next();
-            size++;
-        }
-        return sites.toArray(new UrbanDeploySite[size]);
+        return sites.toArray(new UrbanDeploySite[sites.size()]);
     }
 
     /**
+     * Replace sites with user defined site values from repeatable global property
      * {@inheritDoc}
      *
      * @param req {@inheritDoc}
@@ -82,21 +90,37 @@ public class UrbanDeployPublisherDescriptor extends BuildStepDescriptor<Publishe
      * @see hudson.model.Descriptor#configure(org.kohsuke.stapler.StaplerRequest)
      */
     @Override
-    public boolean configure(StaplerRequest req, JSONObject formData) {
-        sites.replaceBy(req.bindParametersToList(UrbanDeploySite.class, "ud."));
-        save();
-        return true;
+    public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+        //sites.replaceBy(req.bindParametersToList(UrbanDeploySite.class, "ud."));
+        sites.replaceBy(req.bindJSONToList(UrbanDeploySite.class, formData.get("sites")));
+        save(); // save serializable fields of this instance to persisted storage
+        return super.configure(req, formData);
     }
 
-    public void doTestConnection(StaplerRequest req, StaplerResponse rsp, @QueryParameter("ud.url") final String url,
-                                 @QueryParameter("ud.user") final String user,
-                                 @QueryParameter("ud.password") final String password)
-            throws IOException, ServletException {
+
+    /**
+     * Verify connectivity to the UCD site
+     * @param req
+     * @param rsp
+     * @param url
+     * @param user
+     * @param password
+     * @param trustAllCerts
+     * @throws IOException
+     * @throws ServletException
+     * @deprecated FormFieldValidator
+     */
+    @Deprecated
+    public void doTestConnection(StaplerRequest req, StaplerResponse rsp, @QueryParameter("url") final String url,
+                                 @QueryParameter("user") final String user,
+                                 @QueryParameter("password") final String password,
+                                 @QueryParameter("trustAllCerts") final boolean trustAllCerts)
+    throws IOException, ServletException {
         new FormFieldValidator(req, rsp, true) {
             protected void check()
                     throws IOException, ServletException {
                 try {
-                    UrbanDeploySite site = new UrbanDeploySite(null, url, user, password);
+                    UrbanDeploySite site = new UrbanDeploySite(null, url, user, password, trustAllCerts);
                     site.verifyConnection();
                     ok("Success");
                 }

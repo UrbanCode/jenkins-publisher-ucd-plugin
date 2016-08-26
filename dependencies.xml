@@ -98,8 +98,9 @@
         <directory>lib</directory>
       </delivery>
     </dependency>
+
     <dependency>
-      <ah-project name='uDeployRestClient' workflow='build workflow [jenkins]' />
+      <ah-project name='uDeployRestClient' workflow='build workflow [master]' />
       <criteria status='success' />
       <delivery artifact-set='Dist'>
         <directory>lib</directory>
