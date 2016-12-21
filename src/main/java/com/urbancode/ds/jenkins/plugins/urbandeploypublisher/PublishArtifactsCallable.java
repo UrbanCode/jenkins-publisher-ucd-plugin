@@ -17,6 +17,8 @@ import hudson.remoting.VirtualChannel;
 import java.io.File;
 import java.util.UUID;
 
+import org.jenkinsci.remoting.RoleChecker;
+
 /**
  * This class is called on a channel to publish artifacts to a component version
  *
@@ -103,6 +105,7 @@ public class PublishArtifactsCallable implements Callable<Boolean, Exception> {
      * @return A boolean to represent the task success
      * @throws AbortException
      */
+    @Override
     public Boolean call() throws AbortException {
         File workDir = new File(baseDir);
 
@@ -152,5 +155,10 @@ public class PublishArtifactsCallable implements Callable<Boolean, Exception> {
         }
 
         return true;
+    }
+
+    @Override
+    public void checkRoles(RoleChecker checker) throws SecurityException {
+        this.checkRoles(checker);
     }
 }

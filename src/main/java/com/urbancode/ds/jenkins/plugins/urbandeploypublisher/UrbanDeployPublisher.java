@@ -21,9 +21,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Date;
-import java.util.UUID;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -281,11 +279,17 @@ public class UrbanDeployPublisher extends Notifier {
             throw new AbortException("Skip version deployment in IBM UrbanCode Deploy - build failed or aborted.");
         }
 
+        UrbanDeploySite udSite = getSite();
+        RestClientHelper clientHelper = new RestClientHelper(udSite.getUri(), udSite);
+
+        if (clientHelper.isMaintenanceEnabled()) {
+            throw new AbortException("UrbanCode Deploy is in maintenance mode, "
+                    + "and no processes may be run.");
+        }
+
         envVars = build.getEnvironment(listener); // used to resolve environment
                                                   // variables in the build
                                                   // environment
-        UrbanDeploySite udSite = getSite();
-        RestClientHelper clientHelper = new RestClientHelper(udSite.getUri(), udSite.getClient());
 
         String resolvedComponent = envVars.expand(component);
         String resolvedVersion = envVars.expand(version);
@@ -314,14 +318,16 @@ public class UrbanDeployPublisher extends Notifier {
                     listener);
 
             // task must run on the correct channel
+            listener.getLogger().println(launcher.getChannel().toString());
             task.callOnChannel(launcher.getChannel());
 
             // create properties on version
-            clientHelper.setComponentVersionProperties(
-                    resolvedComponent,
-                    resolvedVersion,
-                    resolvedProperties,
-                    listener);
+            if (resolvedProperties.length() > 0) {
+                clientHelper.setComponentVersionProperties(resolvedComponent,
+                                                           resolvedVersion,
+                                                           resolvedProperties,
+                                                           listener);
+            }
 
             // add component version link
             String linkName = "Jenkins Job " + build.getDisplayName();
@@ -367,7 +373,9 @@ public class UrbanDeployPublisher extends Notifier {
             while (!processFinished) {
                 deploymentResult = clientHelper.checkDeploymentProcessResult(requestId);
 
-                if (!deploymentResult.equalsIgnoreCase("NONE") && !deploymentResult.isEmpty()) {
+                if (!deploymentResult.equalsIgnoreCase("NONE")
+                        && !deploymentResult.isEmpty()
+                        && !deploymentResult.equalsIgnoreCase("SCHEDULED FOR FUTURE")) {
                     processFinished = true;
 
                     if (deploymentResult.equalsIgnoreCase("FAULTED")

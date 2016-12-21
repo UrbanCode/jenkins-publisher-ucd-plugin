@@ -14,6 +14,7 @@ import hudson.model.BuildListener;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,7 +24,6 @@ import java.util.Properties;
 import java.net.URI;
 import java.util.UUID;
 
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -31,24 +31,20 @@ import org.codehaus.jettison.json.JSONObject;
 import com.urbancode.ud.client.ApplicationClient;
 import com.urbancode.ud.client.ComponentClient;
 import com.urbancode.ud.client.PropertyClient;
+import com.urbancode.ud.client.SystemClient;
 import com.urbancode.ud.client.VersionClient;
 
 /**
  * This class is used to provide access to the UrbanCode Deploy rest client
  *
  */
-@SuppressWarnings("deprecation") // Triggered by DefaultHttpClient
-public class RestClientHelper {
-    ApplicationClient appClient;
-    VersionClient versionClient;
-    PropertyClient propClient;
-    ComponentClient compClient;
+public class RestClientHelper implements Serializable {
+    URI ucdUrl;
+    UrbanDeploySite udSite;
 
-    public RestClientHelper(URI ucdUrl, DefaultHttpClient httpClient) {
-        compClient = new ComponentClient(ucdUrl, httpClient);
-        versionClient = new VersionClient(ucdUrl, httpClient);
-        appClient = new ApplicationClient(ucdUrl, httpClient);
-        propClient = new PropertyClient(ucdUrl, httpClient);
+    public RestClientHelper(URI ucdUrl, UrbanDeploySite udSite) {
+        this.ucdUrl = ucdUrl;
+        this.udSite = udSite;
     }
 
     /**
@@ -58,8 +54,13 @@ public class RestClientHelper {
      *
      * @throws AbortException
      */
-    public UUID createComponentVersion(String version, String component, String description)
+    public UUID createComponentVersion(
+            String version,
+            String component,
+            String description)
     throws AbortException {
+        VersionClient versionClient = new VersionClient(ucdUrl, udSite.getClient());
+
         if (version == null || version.isEmpty() || version.length() > 255) {
             throw new AbortException(String.format("Failed to create version '%s' in UrbanCode Deploy. "
                     + "UrbanCode Deploy version names' length must be between 1 and  255 characters "
@@ -90,6 +91,7 @@ public class RestClientHelper {
             String includePatterns,
             String excludePatterns)
     throws AbortException {
+        VersionClient versionClient = new VersionClient(ucdUrl, udSite.getClient());
         String[] includes  = splitFiles(includePatterns);
         String[] excludes = splitFiles(excludePatterns);
 
@@ -111,6 +113,8 @@ public class RestClientHelper {
 
     public void deleteComponentVersion(UUID id)
     throws AbortException {
+        VersionClient versionClient = new VersionClient(ucdUrl, udSite.getClient());
+
         try {
             versionClient.deleteVersion(id);
         }
@@ -139,6 +143,7 @@ public class RestClientHelper {
             String versionName,
             BuildListener listener)
     throws AbortException {
+        ApplicationClient appClient = new ApplicationClient(ucdUrl, udSite.getClient());
         List<String> versions = new ArrayList<String>();
         versions.add(versionName);
 
@@ -178,6 +183,7 @@ public class RestClientHelper {
             String linkUrl)
     throws AbortException
     {
+        ComponentClient compClient = new ComponentClient(ucdUrl, udSite.getClient());
         try {
             compClient.addComponentVersionLink(compName, versionName, linkName, linkUrl);
         }
@@ -196,6 +202,7 @@ public class RestClientHelper {
      */
     public String checkDeploymentProcessResult(String procId)
     throws AbortException {
+        ApplicationClient appClient = new ApplicationClient(ucdUrl, udSite.getClient());
         String deploymentResult;
 
         try {
@@ -227,6 +234,9 @@ public class RestClientHelper {
         Map<String, String> propertiesToSet = readProperties(properties);
 
         if (!propertiesToSet.isEmpty()) {
+            ComponentClient compClient = new ComponentClient(ucdUrl, udSite.getClient());
+            PropertyClient propClient = new PropertyClient(ucdUrl, udSite.getClient());
+            VersionClient versionClient = new VersionClient(ucdUrl, udSite.getClient());
             JSONObject propSheetDef;
             String propSheetDefId;
             String propSheetDefPath;
@@ -364,4 +374,27 @@ public class RestClientHelper {
         return newList.toArray(new String[newList.size()]);
     }
 
+    /**
+     * Check if maintenance mode is enabled on the UCD server
+     * @return boolean representing whether or not maintenance mode is enabled
+     * @throws AbortException
+     */
+    public boolean isMaintenanceEnabled() throws AbortException {
+        SystemClient sysClient = new SystemClient(ucdUrl, udSite.getClient());
+        boolean maintenanceEnabled;
+
+        try {
+            JSONObject systemConfig = sysClient.getSystemConfiguration();
+            maintenanceEnabled = systemConfig.getBoolean("enableMaintenanceMode");
+        }
+        catch (IOException ex) {
+            throw new AbortException("Invalid http response code returned when acquiring UCD system configuration:"
+                    + ex.getMessage());
+        }
+        catch (JSONException ex) {
+            throw new AbortException("Failed to acquire UCD system configuration: " + ex.getMessage());
+        }
+
+        return maintenanceEnabled;
+    }
 }
