@@ -8,3 +8,7 @@ Fixed PI32899 - Jenkins plugin fails on slave nodes with an UnserializbleExcepti
 Fixed PI36005 - Jenkins plugin 1.2.1 not compatible with builds created with earlier versions of the plugin
 
 Fixed PI37957 - Pulled in a fix for excludes options not being handled by a common library.
+
+### Version 1.3
+
+Fixed PI61971 - Connection pool leak in Jenkins ibm-ucdeploy-publisher.
