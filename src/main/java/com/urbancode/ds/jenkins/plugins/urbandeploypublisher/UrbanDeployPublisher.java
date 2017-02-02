@@ -2,7 +2,7 @@
  * Licensed Materials - Property of IBM Corp.
  * IBM UrbanCode Deploy
  * IBM AnthillPro
- * (c) Copyright IBM Corporation 2002, 2016. All Rights Reserved.
+ * (c) Copyright IBM Corporation 2002, 2017. All Rights Reserved.
  *
  * U.S. Government Users Restricted Rights - Use, duplication or disclosure restricted by
  * GSA ADP Schedule Contract with IBM Corp.
@@ -19,6 +19,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.Hudson;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
+import hudson.util.Secret;
 
 import java.io.IOException;
 import java.util.Date;
@@ -40,6 +41,9 @@ public class UrbanDeployPublisher extends Notifier {
     public static final UrbanDeployPublisherDescriptor DESCRIPTOR = new UrbanDeployPublisherDescriptor();
 
     private String siteName;
+    private String altUser;
+    private Secret altPassword;
+    private Boolean altAdminUser;
     private String component;
     private String baseDir;
     private String directoryOffset;
@@ -60,6 +64,9 @@ public class UrbanDeployPublisher extends Notifier {
      * config.jelly
      *
      * @param siteName The profile name of the UrbanDeploy site
+     * @param altUser The alternative username to connect to the UCD server
+     * @param altPassword The alternative password to connect to the UCD server
+     * @param altAdminUser Specifies if the alternative user has administrative privileges
      * @param component The name of the component on the UCD server
      * @param versionName The name of the component version on the UCD server
      * @param directoryOffset The offset from the base directory to pull
@@ -77,9 +84,13 @@ public class UrbanDeployPublisher extends Notifier {
      * @param description A description for the new component version
      */
     @DataBoundConstructor
-    public UrbanDeployPublisher(String siteName, String component, String versionName, String directoryOffset,
-            String baseDir, String fileIncludePatterns, String fileExcludePatterns, Boolean skip, Boolean deploy,
+    public UrbanDeployPublisher(String siteName, String altUser, Secret altPassword, Boolean altAdminUser,
+            String component, String versionName, String directoryOffset, String baseDir,
+            String fileIncludePatterns, String fileExcludePatterns, Boolean skip, Boolean deploy,
             String deployApp, String deployEnv, String deployProc, String properties, String description) {
+        this.altUser = altUser;
+        this.altPassword = altPassword;
+        this.altAdminUser = altAdminUser;
         this.component = component;
         this.version = versionName;
         this.baseDir = baseDir;
@@ -113,6 +124,30 @@ public class UrbanDeployPublisher extends Notifier {
 
     public void setSiteName(String siteName) {
         this.siteName = siteName;
+    }
+
+    public String getAltUser() {
+        return altUser;
+    }
+
+    public void setAltUser(String altUser) {
+        this.altUser = altUser;
+    }
+
+    public Secret getAltPassword() {
+        return altPassword;
+    }
+
+    public void setAltPassword(Secret altPassword) {
+        this.altPassword = altPassword;
+    }
+
+    public boolean isAltAdminUser() {
+        return altAdminUser;
+    }
+
+    public void setAltAdminUser(boolean altAdminUser) {
+        this.altAdminUser = altAdminUser;
     }
 
     public String getComponent() {
@@ -279,13 +314,36 @@ public class UrbanDeployPublisher extends Notifier {
             throw new AbortException("Skip version deployment in IBM UrbanCode Deploy - build failed or aborted.");
         }
 
+        RestClientHelper clientHelper;
         UrbanDeploySite udSite = getSite();
-        RestClientHelper clientHelper = new RestClientHelper(udSite.getUri(), udSite);
+        boolean adminUser;
 
-        if (clientHelper.isMaintenanceEnabled()) {
-            throw new AbortException("UrbanCode Deploy is in maintenance mode, "
-                    + "and no processes may be run.");
+        if (getAltUser().isEmpty()) {
+            adminUser = udSite.isAdminUser();
+
+            clientHelper = new RestClientHelper(
+                    udSite.getUri(),
+                    udSite, udSite.getUser(),
+                    udSite.getPassword());
         }
+        else {
+            listener.getLogger().println("Running job as alternative user '" + getAltUser() + "'.");
+
+            adminUser = isAltAdminUser();
+
+            clientHelper = new RestClientHelper(
+                    udSite.getUri(),
+                    udSite, getAltUser(),
+                    getAltPassword());
+        }
+
+        if (adminUser) {
+            if (clientHelper.isMaintenanceEnabled()) {
+                throw new AbortException("UrbanCode Deploy is in maintenance mode, "
+                        + "and no processes may be run.");
+            }
+        }
+
 
         envVars = build.getEnvironment(listener); // used to resolve environment
                                                   // variables in the build

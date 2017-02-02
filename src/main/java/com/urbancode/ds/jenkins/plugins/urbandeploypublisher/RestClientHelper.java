@@ -2,7 +2,7 @@
  * Licensed Materials - Property of IBM Corp.
  * IBM UrbanCode Deploy
  * IBM AnthillPro
- * (c) Copyright IBM Corporation 2002, 2016. All Rights Reserved.
+ * (c) Copyright IBM Corporation 2002, 2017. All Rights Reserved.
  *
  * U.S. Government Users Restricted Rights - Use, duplication or disclosure restricted by
  * GSA ADP Schedule Contract with IBM Corp.
@@ -11,6 +11,7 @@ package com.urbancode.ds.jenkins.plugins.urbandeploypublisher;
 
 import hudson.AbortException;
 import hudson.model.BuildListener;
+import hudson.util.Secret;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +25,8 @@ import java.util.Properties;
 import java.net.URI;
 import java.util.UUID;
 
+import org.apache.http.impl.client.DefaultHttpClient;
+
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -33,6 +36,7 @@ import com.urbancode.ud.client.ComponentClient;
 import com.urbancode.ud.client.PropertyClient;
 import com.urbancode.ud.client.SystemClient;
 import com.urbancode.ud.client.VersionClient;
+import com.urbancode.ud.client.UDRestClient;
 
 /**
  * This class is used to provide access to the UrbanCode Deploy rest client
@@ -41,10 +45,18 @@ import com.urbancode.ud.client.VersionClient;
 public class RestClientHelper implements Serializable {
     URI ucdUrl;
     UrbanDeploySite udSite;
+    DefaultHttpClient udClient;
 
-    public RestClientHelper(URI ucdUrl, UrbanDeploySite udSite) {
+    public RestClientHelper(URI ucdUrl, UrbanDeploySite udSite, String altUser, Secret altPassword) {
         this.ucdUrl = ucdUrl;
         this.udSite = udSite;
+
+        if (altUser != null && altUser.trim().isEmpty()) {
+            this.udClient = udSite.getTempClient(altUser, altPassword);
+        }
+        else {
+            this.udClient = udSite.getClient();
+        }
     }
 
     /**
@@ -59,7 +71,7 @@ public class RestClientHelper implements Serializable {
             String component,
             String description)
     throws AbortException {
-        VersionClient versionClient = new VersionClient(ucdUrl, udSite.getClient());
+        VersionClient versionClient = new VersionClient(ucdUrl, udClient);
 
         if (version == null || version.isEmpty() || version.length() > 255) {
             throw new AbortException(String.format("Failed to create version '%s' in UrbanCode Deploy. "
@@ -91,7 +103,7 @@ public class RestClientHelper implements Serializable {
             String includePatterns,
             String excludePatterns)
     throws AbortException {
-        VersionClient versionClient = new VersionClient(ucdUrl, udSite.getClient());
+        VersionClient versionClient = new VersionClient(ucdUrl, udClient);
         String[] includes  = splitFiles(includePatterns);
         String[] excludes = splitFiles(excludePatterns);
 
@@ -113,7 +125,7 @@ public class RestClientHelper implements Serializable {
 
     public void deleteComponentVersion(UUID id)
     throws AbortException {
-        VersionClient versionClient = new VersionClient(ucdUrl, udSite.getClient());
+        VersionClient versionClient = new VersionClient(ucdUrl, udClient);
 
         try {
             versionClient.deleteVersion(id);
@@ -125,7 +137,6 @@ public class RestClientHelper implements Serializable {
 
     /**
      * Trigger application deployment process with latest versions of each component.
-     * @param appClient
      * @param app
      * @param env
      * @param proc
@@ -143,7 +154,7 @@ public class RestClientHelper implements Serializable {
             String versionName,
             BuildListener listener)
     throws AbortException {
-        ApplicationClient appClient = new ApplicationClient(ucdUrl, udSite.getClient());
+        ApplicationClient appClient = new ApplicationClient(ucdUrl, udClient);
         List<String> versions = new ArrayList<String>();
         versions.add(versionName);
 
@@ -183,7 +194,7 @@ public class RestClientHelper implements Serializable {
             String linkUrl)
     throws AbortException
     {
-        ComponentClient compClient = new ComponentClient(ucdUrl, udSite.getClient());
+        ComponentClient compClient = new ComponentClient(ucdUrl, udClient);
         try {
             compClient.addComponentVersionLink(compName, versionName, linkName, linkUrl);
         }
@@ -202,7 +213,7 @@ public class RestClientHelper implements Serializable {
      */
     public String checkDeploymentProcessResult(String procId)
     throws AbortException {
-        ApplicationClient appClient = new ApplicationClient(ucdUrl, udSite.getClient());
+        ApplicationClient appClient = new ApplicationClient(ucdUrl, udClient);
         String deploymentResult;
 
         try {
@@ -234,9 +245,9 @@ public class RestClientHelper implements Serializable {
         Map<String, String> propertiesToSet = readProperties(properties);
 
         if (!propertiesToSet.isEmpty()) {
-            ComponentClient compClient = new ComponentClient(ucdUrl, udSite.getClient());
-            PropertyClient propClient = new PropertyClient(ucdUrl, udSite.getClient());
-            VersionClient versionClient = new VersionClient(ucdUrl, udSite.getClient());
+            ComponentClient compClient = new ComponentClient(ucdUrl, udClient);
+            PropertyClient propClient = new PropertyClient(ucdUrl, udClient);
+            VersionClient versionClient = new VersionClient(ucdUrl, udClient);
             JSONObject propSheetDef;
             String propSheetDefId;
             String propSheetDefPath;
@@ -380,7 +391,7 @@ public class RestClientHelper implements Serializable {
      * @throws AbortException
      */
     public boolean isMaintenanceEnabled() throws AbortException {
-        SystemClient sysClient = new SystemClient(ucdUrl, udSite.getClient());
+        SystemClient sysClient = new SystemClient(ucdUrl, udClient);
         boolean maintenanceEnabled;
 
         try {

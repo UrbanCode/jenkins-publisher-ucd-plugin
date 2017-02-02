@@ -2,7 +2,7 @@
  * Licensed Materials - Property of IBM Corp.
  * IBM UrbanCode Deploy
  * IBM AnthillPro
- * (c) Copyright IBM Corporation 2002, 2016. All Rights Reserved.
+ * (c) Copyright IBM Corporation 2002, 2017. All Rights Reserved.
  *
  * U.S. Government Users Restricted Rights - Use, duplication or disclosure restricted by
  * GSA ADP Schedule Contract with IBM Corp.
@@ -114,13 +114,14 @@ public class UrbanDeployPublisherDescriptor extends BuildStepDescriptor<Publishe
     public void doTestConnection(StaplerRequest req, StaplerResponse rsp, @QueryParameter("url") final String url,
                                  @QueryParameter("user") final String user,
                                  @QueryParameter("password") final String password,
+                                 @QueryParameter("adminUser") final boolean adminUser,
                                  @QueryParameter("trustAllCerts") final boolean trustAllCerts)
     throws IOException, ServletException {
         new FormFieldValidator(req, rsp, true) {
             protected void check()
                     throws IOException, ServletException {
                 try {
-                    UrbanDeploySite site = new UrbanDeploySite(null, url, user, password, trustAllCerts);
+                    UrbanDeploySite site = new UrbanDeploySite(null, url, user, password, adminUser, trustAllCerts);
                     site.verifyConnection();
                     ok("Success");
                 }

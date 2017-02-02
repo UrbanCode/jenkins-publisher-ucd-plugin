@@ -11,6 +11,15 @@
                 </j:forEach>
             </select>
         </f:entry>
+        <f:entry title="Alternative User" field="altUser" help="${helpURL}/help-altuser.html">
+          <f:textbox/>
+        </f:entry>
+        <f:entry title="Alternative Password" field="altPassword" help="${helpURL}/help-altpassword.html">
+          <f:password/>
+        </f:entry>
+        <f:entry title="Administrative User" field="altAdminUser" help="${helpURL}/help-adminuser.html">
+          <f:checkbox checked="${instance.isAltAdminUser()}"/>
+        </f:entry>
         <f:entry title="Component" field="component" help="${helpURL}/help-component.html">
             <f:textbox/>
         </f:entry>
@@ -36,7 +45,7 @@
             <f:textarea/>
         </f:entry>
         <f:entry title="Skip Publishing" field="skip" help="${helpURL}/help-skippublish.html">
-            <f:checkbox/>
+            <f:checkbox checked="${instance.isSkip()}"/>
         </f:entry>
         <f:block>
             <table>

@@ -2,7 +2,7 @@
  * Licensed Materials - Property of IBM Corp.
  * IBM UrbanCode Deploy
  * IBM AnthillPro
- * (c) Copyright IBM Corporation 2002, 2016. All Rights Reserved.
+ * (c) Copyright IBM Corporation 2002, 2017. All Rights Reserved.
  *
  * U.S. Government Users Restricted Rights - Use, duplication or disclosure restricted by
  * GSA ADP Schedule Contract with IBM Corp.
@@ -40,17 +40,15 @@ public class UrbanDeploySite implements Serializable {
 
     private static final long serialVersionUID = -8723534991244260459L;
 
-    /** The profile name. */
     private String profileName;
 
-    /** The url. */
     private String url;
 
-    /** The username. */
     private String user;
 
-    /** The password. */
     private Secret password;
+
+    private boolean adminUser;
 
     private boolean trustAllCerts;
 
@@ -71,11 +69,19 @@ public class UrbanDeploySite implements Serializable {
      * @param password
      * @param trustAllCerts
      */
-    public UrbanDeploySite(String profileName, String url, String user, Secret password, boolean trustAllCerts) {
+    public UrbanDeploySite(
+            String profileName,
+            String url,
+            String user,
+            Secret password,
+            boolean adminUser,
+            boolean trustAllCerts)
+    {
         this.profileName = profileName;
         this.url = url;
         this.user = user;
         this.password = password;
+        this.adminUser = adminUser;
         this.trustAllCerts = trustAllCerts;
     }
 
@@ -86,11 +92,19 @@ public class UrbanDeploySite implements Serializable {
      * @param url
      * @param user
      * @param password
+     * @param adminUser
      * @param trustAllCerts
      */
     @DataBoundConstructor
-    public UrbanDeploySite(String profileName, String url, String user, String password, boolean trustAllCerts) {
-        this(profileName, url, user, Secret.fromString(password), trustAllCerts);
+    public UrbanDeploySite(
+            String profileName,
+            String url,
+            String user,
+            String password,
+            boolean adminUser,
+            boolean trustAllCerts)
+    {
+        this(profileName, url, user, Secret.fromString(password), adminUser, trustAllCerts);
     }
 
     public DefaultHttpClient getClient() {
@@ -99,6 +113,10 @@ public class UrbanDeploySite implements Serializable {
         }
 
         return client;
+    }
+
+    public DefaultHttpClient getTempClient(String tempUser, Secret tempPassword) {
+        return UDRestClient.createHttpClient(tempUser, tempPassword.toString(), trustAllCerts);
     }
 
     /**
@@ -207,6 +225,24 @@ public class UrbanDeploySite implements Serializable {
      */
     public void setPassword(Secret password) {
         this.password = password;
+    }
+
+    /**
+     * Gets adminUser
+     *
+     * @return if user has administrative privileges
+     */
+    public boolean isAdminUser() {
+        return adminUser;
+    }
+
+    /**
+     * Sets adminUser to set if the global user has administrative privileges
+     *
+     * @param adminUser
+     */
+    public void setAdminUser(boolean adminUser) {
+        this.adminUser = adminUser;
     }
 
     /**
