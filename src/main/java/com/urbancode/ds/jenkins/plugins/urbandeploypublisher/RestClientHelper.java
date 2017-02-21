@@ -43,20 +43,16 @@ import com.urbancode.ud.client.UDRestClient;
  *
  */
 public class RestClientHelper implements Serializable {
-    URI ucdUrl;
-    UrbanDeploySite udSite;
-    DefaultHttpClient udClient;
+    private URI ucdUrl;
+    private UrbanDeploySite udSite;
+    private String altUser;
+    private Secret altPassword;
 
     public RestClientHelper(URI ucdUrl, UrbanDeploySite udSite, String altUser, Secret altPassword) {
         this.ucdUrl = ucdUrl;
         this.udSite = udSite;
-
-        if (altUser != null && altUser.trim().isEmpty()) {
-            this.udClient = udSite.getTempClient(altUser, altPassword);
-        }
-        else {
-            this.udClient = udSite.getClient();
-        }
+        this.altUser = altUser != null ? altUser.trim() : "";
+        this.altPassword = altPassword;
     }
 
     /**
@@ -71,7 +67,7 @@ public class RestClientHelper implements Serializable {
             String component,
             String description)
     throws AbortException {
-        VersionClient versionClient = new VersionClient(ucdUrl, udClient);
+        VersionClient versionClient = new VersionClient(ucdUrl, getUdClient());
 
         if (version == null || version.isEmpty() || version.length() > 255) {
             throw new AbortException(String.format("Failed to create version '%s' in UrbanCode Deploy. "
@@ -103,7 +99,7 @@ public class RestClientHelper implements Serializable {
             String includePatterns,
             String excludePatterns)
     throws AbortException {
-        VersionClient versionClient = new VersionClient(ucdUrl, udClient);
+        VersionClient versionClient = new VersionClient(ucdUrl, getUdClient());
         String[] includes  = splitFiles(includePatterns);
         String[] excludes = splitFiles(excludePatterns);
 
@@ -125,7 +121,7 @@ public class RestClientHelper implements Serializable {
 
     public void deleteComponentVersion(UUID id)
     throws AbortException {
-        VersionClient versionClient = new VersionClient(ucdUrl, udClient);
+        VersionClient versionClient = new VersionClient(ucdUrl, getUdClient());
 
         try {
             versionClient.deleteVersion(id);
@@ -154,7 +150,7 @@ public class RestClientHelper implements Serializable {
             String versionName,
             BuildListener listener)
     throws AbortException {
-        ApplicationClient appClient = new ApplicationClient(ucdUrl, udClient);
+        ApplicationClient appClient = new ApplicationClient(ucdUrl, getUdClient());
         List<String> versions = new ArrayList<String>();
         versions.add(versionName);
 
@@ -194,7 +190,7 @@ public class RestClientHelper implements Serializable {
             String linkUrl)
     throws AbortException
     {
-        ComponentClient compClient = new ComponentClient(ucdUrl, udClient);
+        ComponentClient compClient = new ComponentClient(ucdUrl, getUdClient());
         try {
             compClient.addComponentVersionLink(compName, versionName, linkName, linkUrl);
         }
@@ -213,7 +209,7 @@ public class RestClientHelper implements Serializable {
      */
     public String checkDeploymentProcessResult(String procId)
     throws AbortException {
-        ApplicationClient appClient = new ApplicationClient(ucdUrl, udClient);
+        ApplicationClient appClient = new ApplicationClient(ucdUrl, getUdClient());
         String deploymentResult;
 
         try {
@@ -243,7 +239,7 @@ public class RestClientHelper implements Serializable {
             BuildListener listener)
     throws AbortException {
         Map<String, String> propertiesToSet = readProperties(properties);
-
+        DefaultHttpClient udClient = getUdClient();
         if (!propertiesToSet.isEmpty()) {
             ComponentClient compClient = new ComponentClient(ucdUrl, udClient);
             PropertyClient propClient = new PropertyClient(ucdUrl, udClient);
@@ -391,7 +387,7 @@ public class RestClientHelper implements Serializable {
      * @throws AbortException
      */
     public boolean isMaintenanceEnabled() throws AbortException {
-        SystemClient sysClient = new SystemClient(ucdUrl, udClient);
+        SystemClient sysClient = new SystemClient(ucdUrl, getUdClient());
         boolean maintenanceEnabled;
 
         try {
@@ -407,5 +403,18 @@ public class RestClientHelper implements Serializable {
         }
 
         return maintenanceEnabled;
+    }
+
+    private DefaultHttpClient getUdClient() {
+        DefaultHttpClient udClient;
+
+        if (altUser.isEmpty()) {
+            udClient = udSite.getTempClient(altUser, altPassword);
+        }
+        else {
+            udClient = udSite.getClient();
+        }
+
+        return udClient;
     }
 }
