@@ -1,0 +1,58 @@
+import groovy.util.XmlSlurper
+plugins {
+  id "org.jenkins-ci.jpi" version "0.16.0"
+}
+
+group = "com.urbancode.ds.jenkins.plugins"
+version = getVersion()
+description = "Publish artifacts into an IBM UrbanCode Deploy component as a post-build action."
+
+jenkinsPlugin {
+    coreVersion = "1.587"                                         // Version of Jenkins core this plugin depends on.
+    displayName = "IBM UrbanCode Deploy Jenkins Publisher Plugin" // Human-readable name of plugin.
+    url = "https://developer.ibm.com/urbancode/plugin/jenkins/"   // URL for plugin on Jenkins wiki or elsewhere.
+    gitHubUrl = "https://github.com/IBM-UrbanCode"                // Plugin URL on GitHub. Optional.
+    shortName = "ibm-ucdeploy-publisher-open"                     // Plugin ID, defaults to the project name without trailing '-plugin'
+
+    // The developers section is optional, and corresponds to the POM developers section.
+    developers {[
+        developer {
+            id "nhmathis"
+            name "Nicholas Mathison"
+            email "nhmathis(at)us(dot)ibm(dot)com"
+        },
+        developer {
+            id "jrbarto"
+            name "Jeffrey Barto"
+            email "jrbarto(at)us(dot)ibm(dot)com"
+        }
+    ]}
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://public.dhe.ibm.com/software/products/UrbanCode/maven2/"
+    }
+}
+
+dependencies {
+    compile 'com.ibm.urbancode.commons:uDeployRestClient:+'
+    // compile 'com.ibm.urbancode.commons:CommonsFileUtils:+'
+    // compile 'com.ibm.urbancode.commons:HttpComponents-Util:+'
+    // compile 'com.ibm.urbancode.commons:CommonsUtil:+'
+    // compile 'com.sun.jersey:jersey-core:1.12'
+    // compile 'com.sun.jersey:jersey-client:1.12'
+    compile 'javax.ws.rs:jsr311-api:1.1.1'
+    // compile 'org.codehaus.jettison:jettison:1.1'
+    // compile 'commons-lang:commons-lang:2.5'
+    // compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.3.4'
+    // compile group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.3.4'
+    // compile group: 'org.apache.httpcomponents', name: 'httpmime', version: '4.3.4'
+}
+
+def getVersion() {
+    def pomFile = new XmlSlurper().parseText(new File("pom.xml").text)
+    def version = pomFile.version.text()
+    return version.replace('${env.buildLife}', "open")
+}
