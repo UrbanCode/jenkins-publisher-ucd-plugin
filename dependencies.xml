@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    © Copyright IBM Corporation 2015, 2017.
+    This is licensed under the following license.
+    The Eclipse Public 1.0 License (http://www.eclipse.org/legal/epl-v10.html)
+    U.S. Government Users Restricted Rights:  Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
+-->
 <project xmlns="http://www.urbancode.com/schema/cs/project-dependencies/1.0"
  name="jenkins-ud-plugin" workflow="build workflow [master]">
   <dependencies conflictStrategy="FAIL">
