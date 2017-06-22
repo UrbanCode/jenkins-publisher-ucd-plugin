@@ -107,7 +107,7 @@
     <!-- ==================================================================
          COMPILE
          ================================================================== -->
-    <target name="prepare" depends="resolve">
+    <target name="prepare" depends="resolve" unless="prepare.no">
         <exec executable="${mvn}">
           <arg value="install:install-file"/>
           <arg value="-Dfile=lib/uDeployRestClient.jar"/>
