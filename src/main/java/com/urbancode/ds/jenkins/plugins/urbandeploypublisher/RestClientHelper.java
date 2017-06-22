@@ -192,6 +192,7 @@ public class RestClientHelper implements Serializable {
             compClient.addComponentVersionLink(compName, versionName, linkName, linkUrl);
         }
         catch (Exception ex) {
+            ex.printStackTrace();
             throw new AbortException("Failed to add a version link to the component '" + compName + "' : "
                     +  ex.getMessage());
         }
@@ -406,10 +407,10 @@ public class RestClientHelper implements Serializable {
         DefaultHttpClient udClient;
 
         if (altUser.isEmpty()) {
-            udClient = udSite.getTempClient(altUser, altPassword);
+            udClient = udSite.getClient();
         }
         else {
-            udClient = udSite.getClient();
+            udClient = udSite.getTempClient(altUser, altPassword);
         }
 
         return udClient;
