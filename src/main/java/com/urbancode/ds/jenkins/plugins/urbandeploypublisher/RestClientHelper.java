@@ -406,10 +406,10 @@ public class RestClientHelper implements Serializable {
         DefaultHttpClient udClient;
 
         if (altUser.isEmpty()) {
-            udClient = udSite.getTempClient(altUser, altPassword);
+            udClient = udSite.getClient();
         }
         else {
-            udClient = udSite.getClient();
+            udClient = udSite.getTempClient(altUser, altPassword);
         }
 
         return udClient;

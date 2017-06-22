@@ -21,6 +21,9 @@ This open source plug-in uses Gradle as its build tool. [Install the latest vers
 
 ## Release Notes
 
+### Version 1.7
+Use Global and Alternative credentials appropriately.
+
 ### Version 1.6
 Fixed PI77548 - Unable to resolve component process properties.
 
