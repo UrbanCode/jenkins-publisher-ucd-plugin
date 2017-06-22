@@ -22,25 +22,23 @@ This open source plug-in uses Gradle as its build tool. [Install the latest vers
 ## Release Notes
 
 ### Version 1.7
-Use Global and Alternative credentials appropriately.
-Continue build process if Component Version link assignment fails.
+- Use Global and Alternative credentials appropriately.
+- Continue build process if Component Version link assignment fails.
 
 ### Version 1.6
-Fixed PI77548 - Unable to resolve component process properties.
+- Fixed PI77548 - Unable to resolve component process properties.
 
 ### Version 1.5
-Fixed unserializable error when publishing versions.
+- Fixed unserializable error when publishing versions.
 
 ### Version 1.4
-Added checkbox to configure administrative user.
-Added per job user credential configuration.
+- Added checkbox to configure administrative user.
+- Added per job user credential configuration.
 
 ### Version 1.3
-Fixed PI61971 - Connection pool leak in Jenkins ibm-ucdeploy-publisher.
+- Fixed PI61971 - Connection pool leak in Jenkins ibm-ucdeploy-publisher.
 
 ### Older Versions
-Fixed PI32899 - Jenkins plugin fails on slave nodes with an UnserializbleException
-
-Fixed PI36005 - Jenkins plugin 1.2.1 not compatible with builds created with earlier versions of the plugin
-
-Fixed PI37957 - Pulled in a fix for excludes options not being handled by a common library.
+- Fixed PI32899 - Jenkins plugin fails on slave nodes with an UnserializbleException
+- Fixed PI36005 - Jenkins plugin 1.2.1 not compatible with builds created with earlier versions of the plugin
+- Fixed PI37957 - Pulled in a fix for excludes options not being handled by a common library.
