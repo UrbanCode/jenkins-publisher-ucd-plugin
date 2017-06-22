@@ -30,20 +30,13 @@
     </condition>
 
     <property name="MAVEN_HOME" value="${env.MAVEN_HOME}"/>
+    <property name="git" value="git"/>
 
     <!-- ==================================================================
          ENVIRONMENTAL DETECTION
          ================================================================== -->
-    <condition property="git" value="git.cmd">
-        <os family="windows" />
-    </condition>
-    <condition property="git" value="git">
-        <not>
-            <os family="windows" />
-        </not>
-    </condition>
 
-    <condition property="mvn" value="${MAVEN_HOME}/bin/mvn.bat">
+    <condition property="mvn" value="${MAVEN_HOME}/bin/mvn.cmd">
         <os family="windows" />
     </condition>
     <condition property="mvn" value="${MAVEN_HOME}/bin/mvn">
