@@ -192,6 +192,7 @@ public class RestClientHelper implements Serializable {
             compClient.addComponentVersionLink(compName, versionName, linkName, linkUrl);
         }
         catch (Exception ex) {
+            ex.printStackTrace();
             throw new AbortException("Failed to add a version link to the component '" + compName + "' : "
                     +  ex.getMessage());
         }

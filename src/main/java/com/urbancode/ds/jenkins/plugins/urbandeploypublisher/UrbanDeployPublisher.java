@@ -388,7 +388,13 @@ public class UrbanDeployPublisher extends Notifier {
             String linkName = "Jenkins Job " + build.getDisplayName();
             String linkUrl = Hudson.getInstance().getRootUrl() + build.getUrl();
             listener.getLogger().println("Adding Jenkins job link " + linkUrl);
-            clientHelper.addLinkToComp(resolvedComponent, resolvedVersion, linkName, linkUrl);
+            try {
+                clientHelper.addLinkToComp(resolvedComponent, resolvedVersion, linkName, linkUrl);
+            } catch (Exception ex){
+                // If link cannot be added to the component version, the entire import shouldn't crash
+                listener.getLogger().println("[Warning] " +  ex.getMessage());
+                listener.getLogger().println("\t View the server logs for a complete stack trace.");
+            }
         }
 
         if (deploy) {
