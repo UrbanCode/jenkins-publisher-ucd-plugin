@@ -133,8 +133,10 @@ public class RestClientHelper implements Serializable {
      * @param app
      * @param env
      * @param proc
+     * @param desc
      * @param componentName
      * @param versionName
+     * @param requestProperties
      * @param listener
      * @return The id of the application process request
      * @throws AbortException
@@ -143,6 +145,8 @@ public class RestClientHelper implements Serializable {
             String app,
             String env,
             String proc,
+            String desc,
+            String reqProps,
             String componentName,
             String versionName,
             BuildListener listener)
@@ -154,12 +158,14 @@ public class RestClientHelper implements Serializable {
         Map<String, List<String>> compVersions = new HashMap<String, List<String>>();
         compVersions.put(componentName, versions);
 
+        Map<String, String> requestProperties = readProperties(reqProps);
         listener.getLogger().println("Creating application process deployment request.");
 
         UUID appProc;
 
         try {
-            appProc = appClient.requestApplicationProcess(app, proc, "", env, "", false, compVersions);
+            appProc = appClient.requestApplicationProcess(app, proc, desc, env, "", false,
+                compVersions, requestProperties);
         }
         catch (Exception ex) {
             throw new AbortException("Failed to create application process request '" + proc + "' : "
@@ -343,20 +349,21 @@ public class RestClientHelper implements Serializable {
      */
     private Map<String, String> readProperties(String properties) throws AbortException {
         Map<String, String> propertiesToSet = new HashMap<String, String>();
+        System.out.println("Properties: " + properties);
+        if (properties != null && properties.length() > 0) {
+            for (String line : properties.split("\n")) {
+                String[] propDef = line.split("=");
 
-        for (String line : properties.split("\n")) {
-            String[] propDef = line.split("=");
-
-            if (propDef.length >= 2) {
-                String propName = propDef[0].trim();
-                String propVal = propDef[1].trim();
-                propertiesToSet.put(propName, propVal);
-            }
-            else {
-                throw new AbortException("Missing property delimiter '=' in property definition '" + line + "'");
+                if (propDef.length >= 2) {
+                    String propName = propDef[0].trim();
+                    String propVal = propDef[1].trim();
+                    propertiesToSet.put(propName, propVal);
+                }
+                else {
+                    throw new AbortException("Missing property delimiter '=' in property definition '" + line + "'");
+                }
             }
         }
-
         return propertiesToSet;
     }
 

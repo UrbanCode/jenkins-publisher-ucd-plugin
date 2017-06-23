@@ -59,6 +59,12 @@
                     <f:entry title="Deploy Process" field="deployProc" help="${helpURL}/help-deployproc.html">
                         <f:textbox/>
                     </f:entry>
+                    <f:entry title="Request Properties" field="deployReqProps" help="${helpURL}/help-deployreqprops.html">
+                        <f:textarea/>
+                    </f:entry>
+                    <f:entry title="Description" field="deployDesc" help="${helpURL}/help-deploydesc.html">
+                        <f:textbox/>
+                    </f:entry>
                 </f:optionalBlock>
             </table>
         </f:block>
