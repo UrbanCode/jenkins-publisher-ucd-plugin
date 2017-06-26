@@ -78,7 +78,7 @@ public class UrbanDeployPublisher extends Notifier {
      * @param deployApp The application to deploy to on the UCD server
      * @param deployEnv The environment to deploy in on the UCD server
      * @param deployProc The application process to use for deployment on the UCD server
-     * @param deployProps The request properties for the application process
+     * @param deployReqProps The request properties for the application process
      * @param deployDesc The description to apply to the application process
      * @param properties Any properties to create on the new version
      * @param description A description for the new component version
