@@ -164,6 +164,18 @@ public class RestClientHelper implements Serializable {
         UUID appProc;
 
         try {
+            // Confirm all application request properties are fulfilled (not done by UCD)
+            JSONArray unfilledProps = appClient.checkUnfilledApplicationProcessRequestProperties(app, proc, requestProperties);
+            if (unfilledProps.length() > 0) {
+                List<String> props = new ArrayList<String>();
+                for (int i = 0; i < unfilledProps.length(); i++) {
+                    String propName = unfilledProps.getJSONObject(i).getString("name");
+                    props.add(propName);
+                }
+                throw new AbortException("Required UrbanCode Deploy Application Process request properties were not supplied: " + props.toString());
+            }
+
+            // Run the application process
             appProc = appClient.requestApplicationProcess(app, proc, desc, env, "", false,
                 compVersions, requestProperties);
         }
