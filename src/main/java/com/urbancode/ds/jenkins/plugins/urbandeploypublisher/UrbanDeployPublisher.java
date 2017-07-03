@@ -52,6 +52,8 @@ public class UrbanDeployPublisher extends Notifier {
     private String deployApp;
     private String deployEnv;
     private String deployProc;
+    private String deployReqProps;
+    private String deployDesc;
     private EnvVars envVars = null;
     private String properties;
     private String description;
@@ -75,8 +77,9 @@ public class UrbanDeployPublisher extends Notifier {
      * @param deploy A boolean to specify if the version should be deployed
      * @param deployApp The application to deploy to on the UCD server
      * @param deployEnv The environment to deploy in on the UCD server
-     * @param deployProc The application process to use for deployment on the
-     *            UCD server
+     * @param deployProc The application process to use for deployment on the UCD server
+     * @param deployReqProps The request properties for the application process
+     * @param deployDesc The description to apply to the application process
      * @param properties Any properties to create on the new version
      * @param description A description for the new component version
      */
@@ -84,7 +87,8 @@ public class UrbanDeployPublisher extends Notifier {
     public UrbanDeployPublisher(String siteName, String altUser, Secret altPassword, Boolean altAdminUser,
             String component, String versionName, String directoryOffset, String baseDir,
             String fileIncludePatterns, String fileExcludePatterns, Boolean skip, Boolean deploy,
-            String deployApp, String deployEnv, String deployProc, String properties, String description) {
+            String deployApp, String deployEnv, String deployProc, String deployReqProps, String deployDesc,
+            String properties, String description) {
         this.altUser = altUser;
         this.altPassword = altPassword;
         this.altAdminUser = altAdminUser;
@@ -97,10 +101,12 @@ public class UrbanDeployPublisher extends Notifier {
         this.siteName = siteName;
         this.skip = skip;
         this.deploy = deploy;
-        this.deployApp = deployApp;
-        this.deployEnv = deployEnv;
-        this.deployProc = deployProc;
-        this.properties = properties;
+        this.deployApp = deployApp.trim();
+        this.deployEnv = deployEnv.trim();
+        this.deployProc = deployProc.trim();
+        this.deployReqProps = deployReqProps.trim();
+        this.deployDesc = deployDesc.trim();
+        this.properties = properties.trim();
         this.description = description;
     }
 
@@ -254,6 +260,22 @@ public class UrbanDeployPublisher extends Notifier {
         return deployProc;
     }
 
+    public void setDeployReqProps(String deployReqProps) {
+        this.deployReqProps = deployReqProps;
+    }
+
+    public String getDeployReqProps() {
+        return deployReqProps;
+    }
+
+    public void setDeployDesc(String deployDesc) {
+        this.deployDesc = deployDesc;
+    }
+
+    public String getDeployDesc() {
+        return deployDesc;
+    }
+
     /**
      * Obtain the configured UrbanDeploySite object which matches the siteName
      * of the UrbanDeployPublisher instance. (see Manage Hudson and System
@@ -401,6 +423,8 @@ public class UrbanDeployPublisher extends Notifier {
             String resolvedDeployApp = envVars.expand(deployApp);
             String resolvedDeployEnv = envVars.expand(deployEnv);
             String resolvedDeployProc = envVars.expand(deployProc);
+            String resolvedDeployDesc = envVars.expand(deployDesc);
+            String resolvedDeployReqProps = envVars.expand(deployReqProps);
 
             if (resolvedDeployApp == null || resolvedDeployApp.trim().length() == 0) {
                 throw new AbortException("Deploy Application is a required field if Deploy is selected.");
@@ -419,6 +443,8 @@ public class UrbanDeployPublisher extends Notifier {
                     resolvedDeployApp,
                     resolvedDeployEnv,
                     resolvedDeployProc,
+                    resolvedDeployDesc,
+                    resolvedDeployReqProps,
                     resolvedComponent,
                     resolvedVersion,
                     listener);

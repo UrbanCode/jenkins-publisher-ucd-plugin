@@ -21,6 +21,9 @@ This open source plug-in uses Gradle as its build tool. [Install the latest vers
 
 ## Release Notes
 
+### Version 1.8
+- RFE 104275 - Support for Description and Application Request Properties on deployments.
+
 ### Version 1.7
 - Use Global and Alternative credentials appropriately.
 - Continue build process if Component Version link assignment fails.
