@@ -21,6 +21,9 @@ This open source plug-in uses Gradle as its build tool. [Install the latest vers
 
 ## Release Notes
 
+### Version 1.9
+- APAR PI84771 - Invalid versionName property upgrade path originating from v1.2.10.
+
 ### Version 1.8
 - RFE 104275 - Support for Description and Application Request Properties on deployments.
 
