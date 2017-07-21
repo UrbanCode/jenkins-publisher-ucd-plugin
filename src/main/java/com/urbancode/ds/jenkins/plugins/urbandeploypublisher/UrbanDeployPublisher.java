@@ -46,6 +46,7 @@ public class UrbanDeployPublisher extends Notifier {
     private String directoryOffset;
     private String fileIncludePatterns;
     private String fileExcludePatterns;
+    private transient String versionName; // Old property name
     private String version;
     private Boolean skip = false;
     private Boolean deploy = false;
@@ -113,6 +114,14 @@ public class UrbanDeployPublisher extends Notifier {
     // **********************************************************************************************
     // Accessors and mutators required for config.jelly access
     // **********************************************************************************************
+
+    // Used to migrate old property names
+    public Object readResolve() {
+        if (versionName != null) {
+           version = versionName;
+        }
+        return this;
+    }
 
     public String getSiteName() {
         String name = siteName;
