@@ -111,14 +111,13 @@ public class UrbanDeployPublisherDescriptor extends BuildStepDescriptor<Publishe
     public void doTestConnection(StaplerRequest req, StaplerResponse rsp, @QueryParameter("url") final String url,
                                  @QueryParameter("user") final String user,
                                  @QueryParameter("password") final String password,
-                                 @QueryParameter("adminUser") final boolean adminUser,
                                  @QueryParameter("trustAllCerts") final boolean trustAllCerts)
     throws IOException, ServletException {
         new FormFieldValidator(req, rsp, true) {
             protected void check()
                     throws IOException, ServletException {
                 try {
-                    UrbanDeploySite site = new UrbanDeploySite(null, url, user, password, adminUser, trustAllCerts);
+                    UrbanDeploySite site = new UrbanDeploySite(null, url, user, password, trustAllCerts);
                     site.verifyConnection();
                     ok("Success");
                 }
