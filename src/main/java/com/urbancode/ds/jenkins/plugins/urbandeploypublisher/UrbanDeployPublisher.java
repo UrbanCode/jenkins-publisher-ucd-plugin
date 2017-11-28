@@ -40,7 +40,6 @@ public class UrbanDeployPublisher extends Notifier {
     private String siteName;
     private String altUser;
     private Secret altPassword;
-    private Boolean altAdminUser;
     private String component;
     private String baseDir;
     private String directoryOffset;
@@ -66,7 +65,6 @@ public class UrbanDeployPublisher extends Notifier {
      * @param siteName The profile name of the UrbanDeploy site
      * @param altUser The alternative username to connect to the UCD server
      * @param altPassword The alternative password to connect to the UCD server
-     * @param altAdminUser Specifies if the alternative user has administrative privileges
      * @param component The name of the component on the UCD server
      * @param versionName The name of the component version on the UCD server
      * @param directoryOffset The offset from the base directory to pull
@@ -85,14 +83,13 @@ public class UrbanDeployPublisher extends Notifier {
      * @param description A description for the new component version
      */
     @DataBoundConstructor
-    public UrbanDeployPublisher(String siteName, String altUser, Secret altPassword, Boolean altAdminUser,
+    public UrbanDeployPublisher(String siteName, String altUser, Secret altPassword,
             String component, String versionName, String directoryOffset, String baseDir,
             String fileIncludePatterns, String fileExcludePatterns, Boolean skip, Boolean deploy,
             String deployApp, String deployEnv, String deployProc, String deployReqProps, String deployDesc,
             String properties, String description) {
         this.altUser = altUser;
         this.altPassword = altPassword;
-        this.altAdminUser = altAdminUser;
         this.component = component;
         this.version = versionName;
         this.baseDir = baseDir;
@@ -152,14 +149,6 @@ public class UrbanDeployPublisher extends Notifier {
 
     public void setAltPassword(Secret altPassword) {
         this.altPassword = altPassword;
-    }
-
-    public boolean isAltAdminUser() {
-        return altAdminUser;
-    }
-
-    public void setAltAdminUser(boolean altAdminUser) {
-        this.altAdminUser = altAdminUser;
     }
 
     public String getComponent() {
@@ -344,11 +333,8 @@ public class UrbanDeployPublisher extends Notifier {
 
         RestClientHelper clientHelper;
         UrbanDeploySite udSite = getSite();
-        boolean adminUser;
 
         if (getAltUser().isEmpty()) {
-            adminUser = udSite.isAdminUser();
-
             clientHelper = new RestClientHelper(
                     udSite.getUri(),
                     udSite, udSite.getUser(),
@@ -357,21 +343,11 @@ public class UrbanDeployPublisher extends Notifier {
         else {
             listener.getLogger().println("Running job as alternative user '" + getAltUser() + "'.");
 
-            adminUser = isAltAdminUser();
-
             clientHelper = new RestClientHelper(
                     udSite.getUri(),
                     udSite, getAltUser(),
                     getAltPassword());
         }
-
-        if (adminUser) {
-            if (clientHelper.isMaintenanceEnabled()) {
-                throw new AbortException("UrbanCode Deploy is in maintenance mode, "
-                        + "and no processes may be run.");
-            }
-        }
-
 
         envVars = build.getEnvironment(listener); // used to resolve environment
                                                   // variables in the build

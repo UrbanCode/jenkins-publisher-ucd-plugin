@@ -398,30 +398,6 @@ public class RestClientHelper implements Serializable {
         return newList.toArray(new String[newList.size()]);
     }
 
-    /**
-     * Check if maintenance mode is enabled on the UCD server
-     * @return boolean representing whether or not maintenance mode is enabled
-     * @throws AbortException
-     */
-    public boolean isMaintenanceEnabled() throws AbortException {
-        SystemClient sysClient = new SystemClient(ucdUrl, getUdClient());
-        boolean maintenanceEnabled;
-
-        try {
-            JSONObject systemConfig = sysClient.getSystemConfiguration();
-            maintenanceEnabled = systemConfig.getBoolean("enableMaintenanceMode");
-        }
-        catch (IOException ex) {
-            throw new AbortException("Invalid http response code returned when acquiring UCD system configuration:"
-                    + ex.getMessage());
-        }
-        catch (JSONException ex) {
-            throw new AbortException("Failed to acquire UCD system configuration: " + ex.getMessage());
-        }
-
-        return maintenanceEnabled;
-    }
-
     private DefaultHttpClient getUdClient() {
         DefaultHttpClient udClient;
 

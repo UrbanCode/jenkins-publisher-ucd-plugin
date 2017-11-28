@@ -21,6 +21,10 @@ This open source plug-in uses Gradle as its build tool. [Install the latest vers
 
 ## Release Notes
 
+### Version 1.10
+- Removed admin user and administrative mode check for maintenance mode. 
+- Maintenance mode is removed in UCD 6.2.4, so we've removed it in the Jenkins plugin too.
+
 ### Version 1.9
 - APAR PI84771 - Invalid versionName property upgrade path originating from v1.2.10.
 

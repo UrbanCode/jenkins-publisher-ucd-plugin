@@ -45,8 +45,6 @@ public class UrbanDeploySite implements Serializable {
 
     private Secret password;
 
-    private boolean adminUser;
-
     private boolean trustAllCerts;
 
     transient private DefaultHttpClient client;
@@ -71,14 +69,12 @@ public class UrbanDeploySite implements Serializable {
             String url,
             String user,
             Secret password,
-            boolean adminUser,
             boolean trustAllCerts)
     {
         this.profileName = profileName;
         this.url = url;
         this.user = user;
         this.password = password;
-        this.adminUser = adminUser;
         this.trustAllCerts = trustAllCerts;
     }
 
@@ -89,7 +85,6 @@ public class UrbanDeploySite implements Serializable {
      * @param url
      * @param user
      * @param password
-     * @param adminUser
      * @param trustAllCerts
      */
     @DataBoundConstructor
@@ -98,10 +93,9 @@ public class UrbanDeploySite implements Serializable {
             String url,
             String user,
             String password,
-            boolean adminUser,
             boolean trustAllCerts)
     {
-        this(profileName, url, user, Secret.fromString(password), adminUser, trustAllCerts);
+        this(profileName, url, user, Secret.fromString(password), trustAllCerts);
     }
 
     public DefaultHttpClient getClient() {
@@ -222,24 +216,6 @@ public class UrbanDeploySite implements Serializable {
      */
     public void setPassword(Secret password) {
         this.password = password;
-    }
-
-    /**
-     * Gets adminUser
-     *
-     * @return if user has administrative privileges
-     */
-    public boolean isAdminUser() {
-        return adminUser;
-    }
-
-    /**
-     * Sets adminUser to set if the global user has administrative privileges
-     *
-     * @param adminUser
-     */
-    public void setAdminUser(boolean adminUser) {
-        this.adminUser = adminUser;
     }
 
     /**

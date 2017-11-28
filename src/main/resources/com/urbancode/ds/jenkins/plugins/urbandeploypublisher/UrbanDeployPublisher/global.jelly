@@ -19,9 +19,6 @@
           <f:entry title="Password" help="${helpURL}/help-password.html">
             <f:password name="password" value="${site.password}"/>
           </f:entry>
-          <f:entry title="Administrative User" field="adminUser" help="${helpURL}/help-adminuser.html">
-            <f:checkbox name="adminUser" checked="${site.adminUser}"/>
-          </f:entry>
           <f:entry title="Trust All Certificates" help="${helpURL}/help-trust.html">
             <f:checkbox name="trustAllCerts" checked="${site.trustAllCerts}" value="${site.trustAllCerts}"/>
           </f:entry>

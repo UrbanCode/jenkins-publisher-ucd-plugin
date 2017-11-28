@@ -17,9 +17,6 @@
         <f:entry title="Alternative Password" field="altPassword" help="${helpURL}/help-altpassword.html">
           <f:password/>
         </f:entry>
-        <f:entry title="Administrative User" field="altAdminUser" help="${helpURL}/help-adminuser.html">
-          <f:checkbox checked="${instance.isAltAdminUser()}"/>
-        </f:entry>
         <f:entry title="Component" field="component" help="${helpURL}/help-component.html">
             <f:textbox/>
         </f:entry>
