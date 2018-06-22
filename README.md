@@ -22,7 +22,7 @@ This open source plug-in uses Gradle as its build tool. [Install the latest vers
 ## Release Notes
 
 ### Version 1.11
-- Update dependencies for compatibility with UCD 6.2.7.1+
+- APAR PI99495 - Update dependencies for compatibility with UCD 6.2.7.1+
 
 ### Version 1.10
 - Removed admin user and administrative mode check for maintenance mode. 
