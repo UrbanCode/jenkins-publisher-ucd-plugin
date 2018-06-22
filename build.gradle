@@ -7,7 +7,7 @@
 
 import groovy.util.XmlSlurper
 plugins {
-  id "org.jenkins-ci.jpi" version "0.16.0"
+  id "org.jenkins-ci.jpi" version "0.26.0"
 }
 
 group = "com.urbancode.ds.jenkins.plugins"
