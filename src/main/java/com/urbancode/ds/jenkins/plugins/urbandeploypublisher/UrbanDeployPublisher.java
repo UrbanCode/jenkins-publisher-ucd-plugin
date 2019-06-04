@@ -488,7 +488,7 @@ public class UrbanDeployPublisher extends Notifier {
                     resolvedVersion,
                     listener);
 
-            listener.getCreateProcess().println("Deployment request created with id: " + requestId);
+            listener.getLogger().println("Deployment request created with id: " + requestId);
             listener
                 .getLogger().println(
                     "Deployment of application request " + requestId + " of application " +
