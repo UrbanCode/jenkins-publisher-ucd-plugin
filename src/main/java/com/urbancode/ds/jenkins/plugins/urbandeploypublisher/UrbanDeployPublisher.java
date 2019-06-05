@@ -2,7 +2,7 @@
  * (c) Copyright IBM Corporation 2015, 2017.
  * This is licensed under the following license.
  * The Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
- * U.S. Government Users Restricted Rights: Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
+ * U.S. Government Users Restricted Rights:  Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
  */
 package com.urbancode.ds.jenkins.plugins.urbandeploypublisher;
 
@@ -68,7 +68,7 @@ public class UrbanDeployPublisher extends Notifier {
      * @param altPassword The alternative password to connect to the UCD server
      * @param component The name of the component on the UCD server
      * @param versionName The name of the component version on the UCD server
-     * @param directoryOffset The offset from the base directory to pull 
+     * @param directoryOffset The offset from the base directory to pull
      *            artifacts
      * @param baseDir The base directory to pull artifacts from
      * @param fileIncludePatterns A list of patterns to include
@@ -339,8 +339,7 @@ public class UrbanDeployPublisher extends Notifier {
         if (getAltUser().isEmpty()) {
             clientHelper = new RestClientHelper(
                     udSite.getUri(),
-                    udSite,
-                    udSite.getUser(),
+                    udSite, udSite.getUser(),
                     udSite.getPassword());
         }
         else {
@@ -348,8 +347,7 @@ public class UrbanDeployPublisher extends Notifier {
 
             clientHelper = new RestClientHelper(
                     udSite.getUri(),
-                    udSite,
-                    getAltUser(),
+                    udSite, getAltUser(),
                     getAltPassword());
         }
 
@@ -401,10 +399,9 @@ public class UrbanDeployPublisher extends Notifier {
             listener.getLogger().println("Adding Jenkins job link " + linkUrl);
             try {
                 clientHelper.addLinkToComp(resolvedComponent, resolvedVersion, linkName, linkUrl);
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 // If link cannot be added to the component version, the entire import shouldn't crash
-                listener.getLogger().println("[Warning] " + ex.getMessage());
+                listener.getLogger().println("[Warning] " +  ex.getMessage());
                 listener.getLogger().println("\t View the server logs for a complete stack trace.");
             }
         }
@@ -426,7 +423,8 @@ public class UrbanDeployPublisher extends Notifier {
                 throw new AbortException("Deploy Process is a required field if Deploy is selected.");
             }
 
-            listener.getLogger().println("Starting deployment process " + resolvedDeployProc + " of application " + deployApp + " in environment " + resolvedDeployEnv);
+            listener.getLogger().println("Starting deployment process " + resolvedDeployProc + " of application " 
+                    + deployApp + " in environment " + resolvedDeployEnv);
 
             String requestId = clientHelper.createDefaultProcessRequest(
                     resolvedDeployApp,
@@ -439,7 +437,8 @@ public class UrbanDeployPublisher extends Notifier {
                     listener);
 
             listener.getLogger().println("Deployment request created with id: " + requestId);
-            listener.getLogger().println("Deployment of application request " + requestId + " of application " + resolvedDeployApp + " is running.");
+            listener.getLogger().println("Deployment of application request " + requestId 
+                    + " of application " + resolvedDeployApp + " is running.");
             long startTime = new Date().getTime();
 
             boolean processFinished = false;
@@ -479,9 +478,9 @@ public class UrbanDeployPublisher extends Notifier {
             long duration = (new Date().getTime() - startTime) / 1000;
 
             listener.getLogger().println("Finished deployment of application request " + requestId
-                    + " for application " + resolvedDeployApp + " in environment " + resolvedDeployEnv 
+                    + " for application " + resolvedDeployApp + " in environment " + resolvedDeployEnv
                     + " in " + duration + " seconds");
-            listener.getLogger().println("The deployment " + deploymentResult 
+            listener.getLogger().println("The deployment " + deploymentResult
                     + ". See the UrbanCode Deploy deployment logs for details.");
         }
         else {
