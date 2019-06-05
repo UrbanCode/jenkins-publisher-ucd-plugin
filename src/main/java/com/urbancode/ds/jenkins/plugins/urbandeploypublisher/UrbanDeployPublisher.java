@@ -399,7 +399,7 @@ public class UrbanDeployPublisher extends Notifier {
             listener.getLogger().println("Adding Jenkins job link " + linkUrl);
             try {
                 clientHelper.addLinkToComp(resolvedComponent, resolvedVersion, linkName, linkUrl);
-            } catch (Exception ex) {
+            } catch (Exception ex){
                 // If link cannot be added to the component version, the entire import shouldn't crash
                 listener.getLogger().println("[Warning] " +  ex.getMessage());
                 listener.getLogger().println("\t View the server logs for a complete stack trace.");
@@ -423,7 +423,7 @@ public class UrbanDeployPublisher extends Notifier {
                 throw new AbortException("Deploy Process is a required field if Deploy is selected.");
             }
 
-            listener.getLogger().println("Starting deployment process " + resolvedDeployProc + " of application " 
+            listener.getLogger().println("Starting deployment process " + resolvedDeployProc + " of application "
                     + deployApp + " in environment " + resolvedDeployEnv);
 
             String requestId = clientHelper.createDefaultProcessRequest(
@@ -437,7 +437,7 @@ public class UrbanDeployPublisher extends Notifier {
                     listener);
 
             listener.getLogger().println("Deployment request created with id: " + requestId);
-            listener.getLogger().println("Deployment of application request " + requestId 
+            listener.getLogger().println("Deployment of application request " + requestId
                     + " of application " + resolvedDeployApp + " is running.");
             long startTime = new Date().getTime();
 
@@ -449,16 +449,16 @@ public class UrbanDeployPublisher extends Notifier {
                 while (!processFinished) {
                     deploymentResult = clientHelper.checkDeploymentProcessResult(requestId);
 
-                    if (!deploymentResult.equalsIgnoreCase("NONE") 
-                            && !deploymentResult.isEmpty() 
-                            && !deploymentResult.equalsIgnoreCase("SCHEDULED FOR FUTURE")) {
-                        processFinished = true;
+                if (!deploymentResult.equalsIgnoreCase("NONE")
+                        && !deploymentResult.isEmpty()
+                        && !deploymentResult.equalsIgnoreCase("SCHEDULED FOR FUTURE")) {
+                    processFinished = true;
 
-                        if (deploymentResult.equalsIgnoreCase("FAULTED") 
-                                || deploymentResult.equalsIgnoreCase("FAILED TO START")) {
-                            throw new AbortException("Deployment process failed with result " + deploymentResult);
-                        }
-                    }
+                if (deploymentResult.equalsIgnoreCase("FAULTED") 
+                        || deploymentResult.equalsIgnoreCase("FAILED TO START")) {
+                    throw new AbortException("Deployment process failed with result " + deploymentResult);
+                 }
+              }
 
                     // give application process more time to complete
                     try {
