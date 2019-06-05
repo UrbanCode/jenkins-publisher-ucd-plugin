@@ -2,8 +2,7 @@
  * (c) Copyright IBM Corporation 2015, 2017.
  * This is licensed under the following license.
  * The Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
- * U.S. Government Users Restricted Rights: Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
+ * U.S. Government Users Restricted Rights: Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
  */
 package com.urbancode.ds.jenkins.plugins.urbandeploypublisher;
 
@@ -64,67 +63,32 @@ public class UrbanDeployPublisher extends Notifier {
      * Constructor used for data-binding fields from the corresponding
      * config.jelly
      *
-     * @param siteName
-     *            The profile name of the UrbanDeploy site
-     * @param altUser
-     *            The alternative username to connect to the UCD server
-     * @param altPassword
-     *            The alternative password to connect to the UCD server
-     * @param component
-     *            The name of the component on the UCD server
-     * @param versionName
-     *            The name of the component version on the UCD server
-     * @param directoryOffset
-     *            The offset from the base directory to pull
+     * @param siteName The profile name of the UrbanDeploy site
+     * @param altUser The alternative username to connect to the UCD server
+     * @param altPassword The alternative password to connect to the UCD server
+     * @param component The name of the component on the UCD server
+     * @param versionName The name of the component version on the UCD server
+     * @param directoryOffset The offset from the base directory to pull 
      *            artifacts
-     * @param baseDir
-     *            The base directory to pull artifacts from
-     * @param fileIncludePatterns
-     *            A list of patterns to include
-     * @param fileExcludePatterns
-     *            A list of patterns to exclude
-     * @param skip
-     *            A boolean to specify if version publishing should be skipped
-     * @param deploy
-     *            A boolean to specify if the version should be deployed
-     * @param deployApp
-     *            The application to deploy to on the UCD server
-     * @param deployEnv
-     *            The environment to deploy in on the UCD server
-     * @param deployProc
-     *            The application process to use for deployment on the UCD
-     *            server
-     * @param deployReqProps
-     *            The request properties for the application process
-     * @param deployDesc
-     *            The description to apply to the application process
-     * @param properties
-     *            Any properties to create on the new version
-     * @param description
-     *            A description for the new component version
+     * @param baseDir The base directory to pull artifacts from
+     * @param fileIncludePatterns A list of patterns to include
+     * @param fileExcludePatterns A list of patterns to exclude
+     * @param skip A boolean to specify if version publishing should be skipped
+     * @param deploy A boolean to specify if the version should be deployed
+     * @param deployApp The application to deploy to on the UCD server
+     * @param deployEnv The environment to deploy in on the UCD server
+     * @param deployProc The application process to use for deployment on the UCD server
+     * @param deployReqProps The request properties for the application process
+     * @param deployDesc The description to apply to the application process
+     * @param properties Any properties to create on the new version
+     * @param description A description for the new component version
      */
     @DataBoundConstructor
-    public UrbanDeployPublisher(
-        String siteName,
-        String altUser,
-        Secret altPassword,
-        String component,
-        String versionName,
-        String directoryOffset,
-        String baseDir,
-        String fileIncludePatterns,
-        String fileExcludePatterns,
-        Boolean skip,
-        Boolean deploy,
-        String deployApp,
-        String deployEnv,
-        String deployProc,
-        Boolean skipWait,
-        String deployReqProps,
-        String deployDesc,
-        String properties,
-        String description)
-    {
+    public UrbanDeployPublisher(String siteName, String altUser, Secret altPassword,
+            String component, String versionName, String directoryOffset, String baseDir,
+            String fileIncludePatterns, String fileExcludePatterns, Boolean skip, Boolean deploy,
+            String deployApp, String deployEnv, String deployProc, Boolean skipWait, String deployReqProps, String deployDesc,
+            String properties, String description) {
         this.altUser = altUser;
         this.altPassword = altPassword;
         this.component = component;
@@ -153,7 +117,7 @@ public class UrbanDeployPublisher extends Notifier {
     // Used to migrate old property names
     public Object readResolve() {
         if (versionName != null) {
-            version = versionName;
+           version = versionName;
         }
         return this;
     }
@@ -357,18 +321,16 @@ public class UrbanDeployPublisher extends Notifier {
      * @return whether or not the build can continue
      * @throws AbortException
      * @throws InterruptedException
-     * @throws java.io.IOException
-     *             {@inheritDoc}
+     * @throws java.io.IOException {@inheritDoc}
      * @see hudson.tasks.BuildStep#perform(hudson.model.Build, hudson.Launcher,
      *      hudson.model.BuildListener)
      */
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
-    throws AbortException, InterruptedException, IOException {
+            throws AbortException, InterruptedException, IOException {
 
         if (build.getResult() == Result.FAILURE || build.getResult() == Result.ABORTED) {
-            throw new AbortException(
-                "Skip version deployment in IBM UrbanCode Deploy - build failed or aborted.");
+            throw new AbortException("Skip version deployment in IBM UrbanCode Deploy - build failed or aborted.");
         }
 
         RestClientHelper clientHelper;
@@ -376,19 +338,19 @@ public class UrbanDeployPublisher extends Notifier {
 
         if (getAltUser().isEmpty()) {
             clientHelper = new RestClientHelper(
-                udSite.getUri(),
-                udSite,
-                udSite.getUser(),
-                udSite.getPassword());
+                    udSite.getUri(),
+                    udSite,
+                    udSite.getUser(),
+                    udSite.getPassword());
         }
         else {
             listener.getLogger().println("Running job as alternative user '" + getAltUser() + "'.");
 
             clientHelper = new RestClientHelper(
-                udSite.getUri(),
-                udSite,
-                getAltUser(),
-                getAltPassword());
+                    udSite.getUri(),
+                    udSite,
+                    getAltUser(),
+                    getAltPassword());
         }
 
         envVars = build.getEnvironment(listener); // used to resolve environment
@@ -399,9 +361,7 @@ public class UrbanDeployPublisher extends Notifier {
         String resolvedVersion = envVars.expand(version);
 
         if (skip) {
-            listener
-                .getLogger().println(
-                    "Skip artifacts upload to IBM UrbanCode Deploy - step disabled.");
+            listener.getLogger().println("Skip artifacts upload to IBM UrbanCode Deploy - step disabled.");
         }
         else {
             String resolvedBaseDir = envVars.expand(baseDir);
@@ -413,15 +373,15 @@ public class UrbanDeployPublisher extends Notifier {
 
             // create version and upload files
             PublishArtifactsCallable task = new PublishArtifactsCallable(
-                clientHelper,
-                resolvedBaseDir,
-                resolvedDirectoryOffset,
-                resolvedFileIncludePatterns,
-                resolvedFileExcludePatterns,
-                resolvedComponent,
-                resolvedVersion,
-                resolvedDescription,
-                listener);
+                    clientHelper,
+                    resolvedBaseDir,
+                    resolvedDirectoryOffset,
+                    resolvedFileIncludePatterns,
+                    resolvedFileExcludePatterns,
+                    resolvedComponent,
+                    resolvedVersion,
+                    resolvedDescription,
+                    listener);
 
             // task must run on the correct channel
             listener.getLogger().println(launcher.getChannel().toString());
@@ -429,12 +389,10 @@ public class UrbanDeployPublisher extends Notifier {
 
             // create properties on version
             if (resolvedProperties.length() > 0) {
-                clientHelper
-                    .setComponentVersionProperties(
-                        resolvedComponent,
-                        resolvedVersion,
-                        resolvedProperties,
-                        listener);
+                clientHelper.setComponentVersionProperties(resolvedComponent,
+                                                           resolvedVersion,
+                                                           resolvedProperties,
+                                                           listener);
             }
 
             // add component version link
@@ -445,8 +403,7 @@ public class UrbanDeployPublisher extends Notifier {
                 clientHelper.addLinkToComp(resolvedComponent, resolvedVersion, linkName, linkUrl);
             }
             catch (Exception ex) {
-                // If link cannot be added to the component version, the entire
-                // import shouldn't crash
+                // If link cannot be added to the component version, the entire import shouldn't crash
                 listener.getLogger().println("[Warning] " + ex.getMessage());
                 listener.getLogger().println("\t View the server logs for a complete stack trace.");
             }
@@ -460,25 +417,18 @@ public class UrbanDeployPublisher extends Notifier {
             String resolvedDeployReqProps = envVars.expand(deployReqProps);
 
             if (resolvedDeployApp == null || resolvedDeployApp.trim().length() == 0) {
-                throw new AbortException(
-                    "Deploy Application is a required field if Deploy is selected.");
+                throw new AbortException("Deploy Application is a required field if Deploy is selected.");
             }
             if (resolvedDeployEnv == null || resolvedDeployEnv.trim().length() == 0) {
-                throw new AbortException(
-                    "Deploy Environment is a required field if Deploy is selected.");
+                throw new AbortException("Deploy Environment is a required field if Deploy is selected.");
             }
             if (resolvedDeployProc == null || resolvedDeployProc.trim().length() == 0) {
-                throw new AbortException(
-                    "Deploy Process is a required field if Deploy is selected.");
+                throw new AbortException("Deploy Process is a required field if Deploy is selected.");
             }
 
-            listener
-                .getLogger().println(
-                    "Starting deployment process " + resolvedDeployProc + " of application " +
-                        deployApp + " in environment " + resolvedDeployEnv);
+            listener.getLogger().println("Starting deployment process " + resolvedDeployProc + " of application " + deployApp + " in environment " + resolvedDeployEnv);
 
-            String requestId = clientHelper
-                .createDefaultProcessRequest(
+            String requestId = clientHelper.createDefaultProcessRequest(
                     resolvedDeployApp,
                     resolvedDeployEnv,
                     resolvedDeployProc,
@@ -489,10 +439,7 @@ public class UrbanDeployPublisher extends Notifier {
                     listener);
 
             listener.getLogger().println("Deployment request created with id: " + requestId);
-            listener
-                .getLogger().println(
-                    "Deployment of application request " + requestId + " of application " +
-                        resolvedDeployApp + " is running.");
+            listener.getLogger().println("Deployment of application request " + requestId + " of application " + resolvedDeployApp + " is running.");
             long startTime = new Date().getTime();
 
             boolean processFinished = false;
@@ -503,16 +450,14 @@ public class UrbanDeployPublisher extends Notifier {
                 while (!processFinished) {
                     deploymentResult = clientHelper.checkDeploymentProcessResult(requestId);
 
-                    if (!deploymentResult.equalsIgnoreCase("NONE") && !deploymentResult.isEmpty() &&
-                        !deploymentResult.equalsIgnoreCase("SCHEDULED FOR FUTURE"))
-                    {
+                    if (!deploymentResult.equalsIgnoreCase("NONE") 
+                            && !deploymentResult.isEmpty() 
+                            && !deploymentResult.equalsIgnoreCase("SCHEDULED FOR FUTURE")) {
                         processFinished = true;
 
-                        if (deploymentResult.equalsIgnoreCase("FAULTED") || deploymentResult
-                            .equalsIgnoreCase("FAILED TO START"))
-                        {
-                            throw new AbortException(
-                                "Deployment process failed with result " + deploymentResult);
+                        if (deploymentResult.equalsIgnoreCase("FAULTED") 
+                                || deploymentResult.equalsIgnoreCase("FAILED TO START")) {
+                            throw new AbortException("Deployment process failed with result " + deploymentResult);
                         }
                     }
 
@@ -527,29 +472,20 @@ public class UrbanDeployPublisher extends Notifier {
                 }
             }
             else {
-                listener
-                    .getLogger().println(
-                        "'Skip Wait' option selected. Returning immmediately " +
-                            "without waiting for the UCD process to complete.");
+                listener.getLogger().println("'Skip Wait' option selected. Returning immmediately " + "without waiting for the UCD process to complete.");
 
             }
 
             long duration = (new Date().getTime() - startTime) / 1000;
 
-            listener
-                .getLogger().println(
-                    "Finished deployment of application request " + requestId +
-                        " for application " + resolvedDeployApp + " in environment " +
-                        resolvedDeployEnv + " in " + duration + " seconds");
-            listener
-                .getLogger().println(
-                    "The deployment " + deploymentResult +
-                        ". See the UrbanCode Deploy deployment logs for details.");
+            listener.getLogger().println("Finished deployment of application request " + requestId
+                    + " for application " + resolvedDeployApp + " in environment " + resolvedDeployEnv 
+                    + " in " + duration + " seconds");
+            listener.getLogger().println("The deployment " + deploymentResult 
+                    + ". See the UrbanCode Deploy deployment logs for details.");
         }
         else {
-            listener
-                .getLogger().println(
-                    "Skip deploy application to IBM UrbanCode Deploy - step disabled.");
+            listener.getLogger().println("Skip deploy application to IBM UrbanCode Deploy - step disabled.");
         }
         return true;
     }
