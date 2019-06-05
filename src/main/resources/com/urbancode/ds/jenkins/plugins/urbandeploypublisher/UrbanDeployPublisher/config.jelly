@@ -57,7 +57,7 @@
                         <f:textbox/>
                     </f:entry>
                     <f:entry field="skipWait" title="Skip Wait" help="${helpURL}/help-skipwait.html">
-                        <f:checkbox/>
+                        <f:checkbox checked="${instance.isSkipWait()}"/>
                     </f:entry>
                     <f:entry title="Request Properties" field="deployReqProps" help="${helpURL}/help-deployreqprops.html">
                         <f:textarea/>

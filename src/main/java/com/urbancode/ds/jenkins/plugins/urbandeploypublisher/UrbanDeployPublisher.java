@@ -236,6 +236,16 @@ public class UrbanDeployPublisher extends Notifier {
         return deploy;
     }
 
+    public void setSkipWait(boolean skipWait) {
+        this.skipWait = skipWait;
+
+    }
+
+    public Boolean isSkipWait() {
+        return skipWait;
+
+    }
+
     public void setDeployApp(String deployApp) {
         this.deployApp = deployApp;
     }
