@@ -454,9 +454,9 @@ public class UrbanDeployPublisher extends Notifier {
                         && !deploymentResult.equalsIgnoreCase("SCHEDULED FOR FUTURE")) {
                     processFinished = true;
 
-                if (deploymentResult.equalsIgnoreCase("FAULTED") 
-                        || deploymentResult.equalsIgnoreCase("FAILED TO START")) {
-                    throw new AbortException("Deployment process failed with result " + deploymentResult);
+                    if (deploymentResult.equalsIgnoreCase("FAULTED") 
+                            || deploymentResult.equalsIgnoreCase("FAILED TO START")) {
+                        throw new AbortException("Deployment process failed with result " + deploymentResult);
                  }
               }
 
