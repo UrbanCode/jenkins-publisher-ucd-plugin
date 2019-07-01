@@ -52,6 +52,7 @@ public class UrbanDeployPublisher extends Notifier {
     private String deployApp;
     private String deployEnv;
     private String deployProc;
+    private Boolean skipWait;
     private String deployReqProps;
     private String deployDesc;
     private EnvVars envVars = null;
@@ -86,7 +87,7 @@ public class UrbanDeployPublisher extends Notifier {
     public UrbanDeployPublisher(String siteName, String altUser, Secret altPassword,
             String component, String versionName, String directoryOffset, String baseDir,
             String fileIncludePatterns, String fileExcludePatterns, Boolean skip, Boolean deploy,
-            String deployApp, String deployEnv, String deployProc, String deployReqProps, String deployDesc,
+            String deployApp, String deployEnv, String deployProc, Boolean skipWait, String deployReqProps, String deployDesc,
             String properties, String description) {
         this.altUser = altUser;
         this.altPassword = altPassword;
@@ -102,6 +103,7 @@ public class UrbanDeployPublisher extends Notifier {
         this.deployApp = deployApp.trim();
         this.deployEnv = deployEnv.trim();
         this.deployProc = deployProc.trim();
+        this.skipWait = skipWait;
         this.deployReqProps = deployReqProps.trim();
         this.deployDesc = deployDesc.trim();
         this.properties = properties.trim();
@@ -232,6 +234,16 @@ public class UrbanDeployPublisher extends Notifier {
 
     public boolean isDeploy() {
         return deploy;
+    }
+
+    public void setSkipWait(boolean skipWait) {
+        this.skipWait = skipWait;
+
+    }
+
+    public Boolean isSkipWait() {
+        return skipWait;
+
     }
 
     public void setDeployApp(String deployApp) {
@@ -442,8 +454,10 @@ public class UrbanDeployPublisher extends Notifier {
             boolean processFinished = false;
             String deploymentResult = "";
 
-            while (!processFinished) {
-                deploymentResult = clientHelper.checkDeploymentProcessResult(requestId);
+            /* Wait for process to finish unless skipping the wait */
+            if (!skipWait) {
+                while (!processFinished) {
+                    deploymentResult = clientHelper.checkDeploymentProcessResult(requestId);
 
                 if (!deploymentResult.equalsIgnoreCase("NONE")
                         && !deploymentResult.isEmpty()
@@ -453,11 +467,22 @@ public class UrbanDeployPublisher extends Notifier {
                     if (deploymentResult.equalsIgnoreCase("FAULTED")
                             || deploymentResult.equalsIgnoreCase("FAILED TO START")) {
                         throw new AbortException("Deployment process failed with result " + deploymentResult);
+                 }
+              }
+
+                    // give application process more time to complete
+                    try {
+                        Thread.sleep(3000);
+                    }
+                    catch (InterruptedException ex) {
+                        throw new AbortException(
+                            "Could not wait to check deployment result: " + ex.getMessage());
                     }
                 }
+            }
+            else {
+                listener.getLogger().println("'Skip Wait' option selected. Returning immmediately " + "without waiting for the UCD process to complete.");
 
-                // give application process more time to complete
-                Thread.sleep(3000);
             }
 
             long duration = (new Date().getTime() - startTime) / 1000;
