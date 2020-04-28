@@ -21,6 +21,9 @@ This open source plug-in uses Gradle as its build tool. [Install the latest vers
 
 ## Release Notes
 
+### Version 1.14
+- APAR PH24835 - Update dependencies for compatibility for jenkins 2.2
+
 ### Version 1.13
 - Fixing CVE:CVE-2019-4233
 
