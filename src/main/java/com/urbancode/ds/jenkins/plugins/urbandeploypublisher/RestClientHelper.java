@@ -100,6 +100,10 @@ public class RestClientHelper implements Serializable {
         String[] includes  = splitFiles(includePatterns);
         String[] excludes = splitFiles(excludePatterns);
 
+        if(workDir.list().length==0) {
+        	throw new AbortException("Base artifact directory " + workDir.getAbsolutePath() + " does not contain any files to upload. Please place files.");
+        }
+        
         try {
             versionClient.addVersionFiles(
                     component,
