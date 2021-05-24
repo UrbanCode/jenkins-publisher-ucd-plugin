@@ -21,7 +21,7 @@ This open source plug-in uses Gradle as its build tool. [Install the latest vers
 
 ## Release Notes
 ### Version 1.16
-- Fixed : UI Issue comatible for save and apply button.
+- Fixed : UI Issue compatible for save and apply button.
 
 ### Version 1.15
 - APAR PH28324 - UCD Jenkins Plugin - Fail the Jenkins job if nothing is found to push to UCD( avoid false positive)
