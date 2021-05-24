@@ -20,6 +20,9 @@ Plug-ins downloaded directly from the [IBM UrbanCode Plug-ins microsite](https:/
 This open source plug-in uses Gradle as its build tool. [Install the latest version of Gradle](https://gradle.org/install) to build the plug-in locally. Build the plug-in by running the `gradle jpi` command in the plug-in's root directory. The plug-in distributable will be placed under the `build/libs` folder.
 
 ## Release Notes
+### Version 1.16
+- Fixed : UI Issue compatible for save and apply button.
+
 ### Version 1.15
 - APAR PH28324 - UCD Jenkins Plugin - Fail the Jenkins job if nothing is found to push to UCD( avoid false positive)
 
