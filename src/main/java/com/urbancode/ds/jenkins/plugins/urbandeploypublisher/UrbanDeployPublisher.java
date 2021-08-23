@@ -404,7 +404,8 @@ public class UrbanDeployPublisher extends Notifier {
             }
 
             // add component version link
-            String linkName = "Jenkins Job " + build.getDisplayName();
+            // String linkName = "Jenkins Job " + build.getDisplayName();
+            String linkName = "build.url";
             String linkUrl = Hudson.getInstance().getRootUrl() + build.getUrl();
             listener.getLogger().println("Adding Jenkins job link " + linkUrl);
             try {
