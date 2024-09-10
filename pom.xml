@@ -94,11 +94,6 @@
       <version>1.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>uc-jersey-core</groupId>
-      <artifactId>uc-jersey-core</artifactId>
-      <version>1.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
       <groupId>uc-jsr311-api</groupId>
       <artifactId>uc-jsr311-api</artifactId>
       <version>1.0-SNAPSHOT</version>
